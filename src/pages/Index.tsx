@@ -1,13 +1,94 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React, { useState } from 'react';
+import Layout from '@/components/Layout';
+import ReservationHeader from '@/components/Reservation/ReservationHeader';
+import GuestInformation from '@/components/Reservation/GuestInformation';
+import CompanyInformation from '@/components/Reservation/CompanyInformation';
+import PaymentInformation from '@/components/Reservation/PaymentInformation';
+import RoomDetails from '@/components/Reservation/RoomDetails';
+import DocumentUpload from '@/components/Reservation/DocumentUpload';
+import { DateRange } from 'react-day-picker';
 
 const Index = () => {
+  // Tabs state
+  const [activeTab, setActiveTab] = useState<string>("create");
+  
+  // Guest information state
+  const [userType, setUserType] = useState<string>("indian");
+  const [guestName, setGuestName] = useState<string>("");
+  const [address, setAddress] = useState<string>("");
+  const [hasGST, setHasGST] = useState<string>("no");
+  const [bookingMode, setBookingMode] = useState<string>("company");
+  
+  // Company information state
+  const [companyName, setCompanyName] = useState<string>("");
+  const [agentAddress, setAgentAddress] = useState<string>("");
+  const [designation, setDesignation] = useState<string>("");
+  
+  // Payment information state
+  const [paymentMode, setPaymentMode] = useState<string>("cash");
+  const [paymentStatus, setPaymentStatus] = useState<string>("pending");
+  
+  // Room details state
+  const [dateRange, setDateRange] = useState<DateRange>();
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+    <Layout>
+      <div className="space-y-6">
+        <ReservationHeader 
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+        />
+        
+        {activeTab === "create" ? (
+          <>
+            <GuestInformation 
+              userType={userType}
+              setUserType={setUserType}
+              guestName={guestName}
+              setGuestName={setGuestName}
+              address={address}
+              setAddress={setAddress}
+              hasGST={hasGST}
+              setHasGST={setHasGST}
+              bookingMode={bookingMode}
+              setBookingMode={setBookingMode}
+            />
+            
+            <CompanyInformation 
+              bookingMode={bookingMode}
+              companyName={companyName}
+              setCompanyName={setCompanyName}
+              agentAddress={agentAddress}
+              setAgentAddress={setAgentAddress}
+              designation={designation}
+              setDesignation={setDesignation}
+            />
+            
+            <PaymentInformation 
+              paymentMode={paymentMode}
+              setPaymentMode={setPaymentMode}
+              paymentStatus={paymentStatus}
+              setPaymentStatus={setPaymentStatus}
+            />
+            
+            <DocumentUpload userType={userType} />
+            
+            <RoomDetails 
+              dateRange={dateRange}
+              setDateRange={setDateRange}
+            />
+          </>
+        ) : (
+          <div className="rounded-xl bg-white p-8 shadow-sm border border-border/40">
+            <h2 className="text-xl font-medium mb-6">View Reservations</h2>
+            <p className="text-muted-foreground">
+              The view reservations feature will be implemented in a future update.
+            </p>
+          </div>
+        )}
       </div>
-    </div>
+    </Layout>
   );
 };
 
