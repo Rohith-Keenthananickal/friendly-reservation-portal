@@ -7,6 +7,7 @@ import CompanyInformation from '@/components/Reservation/CompanyInformation';
 import PaymentInformation from '@/components/Reservation/PaymentInformation';
 import RoomDetails from '@/components/Reservation/RoomDetails';
 import DocumentUpload from '@/components/Reservation/DocumentUpload';
+import ReservationTable from '@/components/Reservation/ReservationTable';
 import { DateRange } from 'react-day-picker';
 
 const Index = () => {
@@ -80,12 +81,7 @@ const Index = () => {
             />
           </>
         ) : (
-          <div className="rounded-xl bg-white p-8 shadow-sm border border-border/40">
-            <h2 className="text-xl font-medium mb-6">View Reservations</h2>
-            <p className="text-muted-foreground">
-              The view reservations feature will be implemented in a future update.
-            </p>
-          </div>
+          <ReservationTable />
         )}
       </div>
     </Layout>
