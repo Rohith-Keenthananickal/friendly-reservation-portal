@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Search, Filter, CalendarDays, ChevronDown } from "lucide-react";
+import ReservationDetailView from './ReservationDetailView';
 
 // Mock data for reservations
 const mockReservations = [
@@ -79,6 +80,8 @@ const ReservationTable = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [paymentFilter, setPaymentFilter] = useState("all");
   const [bookingModeFilter, setBookingModeFilter] = useState("all");
+  const [detailViewOpen, setDetailViewOpen] = useState(false);
+  const [selectedReservationId, setSelectedReservationId] = useState<string | undefined>(undefined);
   
   // Filter reservations based on search and filters
   const filteredReservations = mockReservations.filter(reservation => {
@@ -122,6 +125,12 @@ const ReservationTable = () => {
       day: 'numeric' 
     };
     return new Date(dateString).toLocaleDateString('en-US', options);
+  };
+  
+  // Handle opening the detailed view for a reservation
+  const handleViewReservation = (reservationId: string) => {
+    setSelectedReservationId(reservationId);
+    setDetailViewOpen(true);
   };
 
   return (
@@ -214,7 +223,13 @@ const ReservationTable = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Button size="sm" variant="outline">View</Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => handleViewReservation(reservation.id)}
+                        >
+                          View
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))
@@ -241,6 +256,13 @@ const ReservationTable = () => {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Reservation Detail Dialog */}
+      <ReservationDetailView 
+        isOpen={detailViewOpen}
+        onClose={() => setDetailViewOpen(false)}
+        reservationId={selectedReservationId}
+      />
     </div>
   );
 };
