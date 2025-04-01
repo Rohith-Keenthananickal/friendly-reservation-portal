@@ -5,11 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PlusSquare, Trash2, Grid3X3 } from 'lucide-react';
+import { PlusSquare, Grid3X3 } from 'lucide-react';
 import { DatePickerWithRange } from './DatePickerWithRange';
 import { DateRange } from 'react-day-picker';
 import { Badge } from '@/components/ui/badge';
+import RoomDetailModal from './RoomDetailModal';
 
 interface RoomDetailsProps {
   dateRange: DateRange | undefined;
@@ -45,33 +45,12 @@ const RoomDetails: React.FC<RoomDetailsProps> = ({ dateRange, setDateRange }) =>
       total: 1500
     }
   ]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const roomTypes = [
-    { id: 1, type: 'Deluxe Room' },
-    { id: 2, type: 'Super Deluxe Room' },
-    { id: 3, type: 'Premium Room' },
-  ];
+  // Calculate total of all rooms
+  const grandTotal = rooms.reduce((sum, room) => sum + room.total, 0);
 
-  const mealPlans = [
-    { id: 1, plan: 'MAP', name: 'Modified American Plan' },
-    { id: 2, plan: 'AP', name: 'American Plan' },
-    { id: 3, plan: 'CP', name: 'Continental Plan' },
-    { id: 4, plan: 'EP', name: 'European Plan' },
-  ];
-
-  const addRoom = () => {
-    const newRoom: Room = {
-      id: rooms.length + 1,
-      roomType: '',
-      checkIn: dateRange?.from ? dateRange.from.toISOString().split('T')[0] : '',
-      checkOut: dateRange?.to ? dateRange.to.toISOString().split('T')[0] : '',
-      nights: 1,
-      mealPlan: '',
-      adults: 2,
-      children: 0,
-      rate: 0,
-      total: 0
-    };
+  const addRoom = (newRoom: Room) => {
     setRooms([...rooms, newRoom]);
   };
 
@@ -81,24 +60,16 @@ const RoomDetails: React.FC<RoomDetailsProps> = ({ dateRange, setDateRange }) =>
     }
   };
 
-  const updateRoom = (id: number, field: string, value: string | number) => {
-    setRooms(rooms.map(room => {
-      if (room.id === id) {
-        const updatedRoom = { ...room, [field]: value };
-        
-        // Recalculate total if rate or nights changes
-        if (field === 'rate' || field === 'nights') {
-          updatedRoom.total = Number(updatedRoom.rate) * Number(updatedRoom.nights);
-        }
-        
-        return updatedRoom;
-      }
-      return room;
-    }));
+  // Format mealPlan display
+  const getMealPlanName = (planCode: string): string => {
+    const plans: Record<string, string> = {
+      'MAP': 'Modified American Plan',
+      'AP': 'American Plan',
+      'CP': 'Continental Plan',
+      'EP': 'European Plan'
+    };
+    return plans[planCode] || planCode;
   };
-
-  // Calculate total of all rooms
-  const grandTotal = rooms.reduce((sum, room) => sum + room.total, 0);
 
   return (
     <Card className="shadow-sm border-border/40 fade-up delay-5">
@@ -117,7 +88,7 @@ const RoomDetails: React.FC<RoomDetailsProps> = ({ dateRange, setDateRange }) =>
             variant="outline" 
             size="sm" 
             className="flex items-center gap-1"
-            onClick={addRoom}
+            onClick={() => setIsModalOpen(true)}
           >
             <PlusSquare className="h-4 w-4" />
             <span>Add Room</span>
@@ -157,112 +128,20 @@ const RoomDetails: React.FC<RoomDetailsProps> = ({ dateRange, setDateRange }) =>
                       <TableHead>Children</TableHead>
                       <TableHead>Rate</TableHead>
                       <TableHead>Total</TableHead>
-                      <TableHead className="w-[60px]"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {rooms.map(room => (
                       <TableRow key={room.id}>
-                        <TableCell>
-                          <Select 
-                            value={room.roomType} 
-                            onValueChange={(value) => updateRoom(room.id, 'roomType', value)}
-                          >
-                            <SelectTrigger className="h-9">
-                              <SelectValue placeholder="Select" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {roomTypes.map((type) => (
-                                <SelectItem key={type.id} value={type.type}>
-                                  {type.type}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell>
-                          <Input 
-                            type="date" 
-                            className="h-9" 
-                            value={room.checkIn}
-                            onChange={(e) => updateRoom(room.id, 'checkIn', e.target.value)}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Input 
-                            type="date" 
-                            className="h-9" 
-                            value={room.checkOut}
-                            onChange={(e) => updateRoom(room.id, 'checkOut', e.target.value)}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Input 
-                            type="number" 
-                            className="h-9 w-16" 
-                            value={room.nights}
-                            onChange={(e) => updateRoom(room.id, 'nights', parseInt(e.target.value))}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Select 
-                            value={room.mealPlan} 
-                            onValueChange={(value) => updateRoom(room.id, 'mealPlan', value)}
-                          >
-                            <SelectTrigger className="h-9">
-                              <SelectValue placeholder="Select" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {mealPlans.map((meal) => (
-                                <SelectItem key={meal.id} value={meal.plan}>
-                                  {meal.plan}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell>
-                          <Input 
-                            type="number" 
-                            className="h-9 w-16" 
-                            value={room.adults}
-                            onChange={(e) => updateRoom(room.id, 'adults', parseInt(e.target.value))}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Input 
-                            type="number" 
-                            className="h-9 w-16" 
-                            value={room.children}
-                            onChange={(e) => updateRoom(room.id, 'children', parseInt(e.target.value))}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Input 
-                            type="number" 
-                            className="h-9 w-24" 
-                            value={room.rate}
-                            onChange={(e) => updateRoom(room.id, 'rate', parseFloat(e.target.value))}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Input 
-                            type="number" 
-                            className="h-9 w-24" 
-                            value={room.total} 
-                            readOnly 
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                            onClick={() => removeRoom(room.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
+                        <TableCell className="font-medium">{room.roomType}</TableCell>
+                        <TableCell>{room.checkIn}</TableCell>
+                        <TableCell>{room.checkOut}</TableCell>
+                        <TableCell>{room.nights}</TableCell>
+                        <TableCell>{room.mealPlan}</TableCell>
+                        <TableCell>{room.adults}</TableCell>
+                        <TableCell>{room.children}</TableCell>
+                        <TableCell>₹{room.rate.toFixed(2)}</TableCell>
+                        <TableCell>₹{room.total.toFixed(2)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -275,121 +154,53 @@ const RoomDetails: React.FC<RoomDetailsProps> = ({ dateRange, setDateRange }) =>
             {rooms.map(room => (
               <Card key={room.id} className="overflow-hidden border-border/40">
                 <div className="bg-primary/5 p-4 flex justify-between items-center">
-                  <div>
-                    <Select 
-                      value={room.roomType} 
-                      onValueChange={(value) => updateRoom(room.id, 'roomType', value)}
-                    >
-                      <SelectTrigger className="h-9 min-w-[180px] bg-white/80">
-                        <SelectValue placeholder="Select Room Type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {roomTypes.map((type) => (
-                          <SelectItem key={type.id} value={type.type}>
-                            {type.type}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <div className="font-medium">{room.roomType || "Room Type Not Selected"}</div>
                   <Button 
                     variant="ghost" 
                     size="icon" 
                     className="h-8 w-8 text-muted-foreground hover:text-destructive bg-white/80 rounded-full"
                     onClick={() => removeRoom(room.id)}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <span className="sr-only">Remove Room</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash-2"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
                   </Button>
                 </div>
                 <CardContent className="p-4">
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <Label htmlFor={`check-in-${room.id}`} className="text-xs">Check In</Label>
-                        <Input 
-                          id={`check-in-${room.id}`}
-                          type="date" 
-                          className="h-9" 
-                          value={room.checkIn}
-                          onChange={(e) => updateRoom(room.id, 'checkIn', e.target.value)}
-                        />
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Check In</Label>
+                        <p>{room.checkIn}</p>
                       </div>
-                      <div className="space-y-1">
-                        <Label htmlFor={`check-out-${room.id}`} className="text-xs">Check Out</Label>
-                        <Input 
-                          id={`check-out-${room.id}`}
-                          type="date" 
-                          className="h-9" 
-                          value={room.checkOut}
-                          onChange={(e) => updateRoom(room.id, 'checkOut', e.target.value)}
-                        />
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Check Out</Label>
+                        <p>{room.checkOut}</p>
                       </div>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <Label htmlFor={`nights-${room.id}`} className="text-xs">Nights</Label>
-                        <Input 
-                          id={`nights-${room.id}`}
-                          type="number" 
-                          className="h-9" 
-                          value={room.nights}
-                          onChange={(e) => updateRoom(room.id, 'nights', parseInt(e.target.value))}
-                        />
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Nights</Label>
+                        <p>{room.nights}</p>
                       </div>
-                      <div className="space-y-1">
-                        <Label htmlFor={`meal-${room.id}`} className="text-xs">Meal Plan</Label>
-                        <Select 
-                          value={room.mealPlan} 
-                          onValueChange={(value) => updateRoom(room.id, 'mealPlan', value)}
-                        >
-                          <SelectTrigger id={`meal-${room.id}`} className="h-9">
-                            <SelectValue placeholder="Select" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {mealPlans.map((meal) => (
-                              <SelectItem key={meal.id} value={meal.plan}>
-                                <div className="flex items-center">
-                                  <span>{meal.plan}</span>
-                                  <span className="ml-1 text-xs text-muted-foreground">({meal.name})</span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Meal Plan</Label>
+                        <p>{room.mealPlan} <span className="text-xs text-muted-foreground">({getMealPlanName(room.mealPlan)})</span></p>
                       </div>
                     </div>
                     
                     <div className="grid grid-cols-3 gap-3">
-                      <div className="space-y-1">
-                        <Label htmlFor={`adults-${room.id}`} className="text-xs">Adults</Label>
-                        <Input 
-                          id={`adults-${room.id}`}
-                          type="number" 
-                          className="h-9" 
-                          value={room.adults}
-                          onChange={(e) => updateRoom(room.id, 'adults', parseInt(e.target.value))}
-                        />
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Adults</Label>
+                        <p>{room.adults}</p>
                       </div>
-                      <div className="space-y-1">
-                        <Label htmlFor={`children-${room.id}`} className="text-xs">Children</Label>
-                        <Input 
-                          id={`children-${room.id}`}
-                          type="number" 
-                          className="h-9" 
-                          value={room.children}
-                          onChange={(e) => updateRoom(room.id, 'children', parseInt(e.target.value))}
-                        />
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Children</Label>
+                        <p>{room.children}</p>
                       </div>
-                      <div className="space-y-1">
-                        <Label htmlFor={`rate-${room.id}`} className="text-xs">Rate</Label>
-                        <Input 
-                          id={`rate-${room.id}`}
-                          type="number" 
-                          className="h-9" 
-                          value={room.rate}
-                          onChange={(e) => updateRoom(room.id, 'rate', parseFloat(e.target.value))}
-                        />
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Rate</Label>
+                        <p>₹{room.rate.toFixed(2)}</p>
                       </div>
                     </div>
                     
@@ -403,7 +214,7 @@ const RoomDetails: React.FC<RoomDetailsProps> = ({ dateRange, setDateRange }) =>
             ))}
             <div className="flex items-center justify-center h-full">
               <Button 
-                onClick={addRoom}
+                onClick={() => setIsModalOpen(true)}
                 variant="outline" 
                 className="h-full w-full border-dashed text-muted-foreground hover:text-primary hover:border-primary min-h-[240px]"
               >
@@ -462,6 +273,13 @@ const RoomDetails: React.FC<RoomDetailsProps> = ({ dateRange, setDateRange }) =>
             Save Reservation
           </Button>
         </div>
+        
+        <RoomDetailModal 
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSave={addRoom}
+          dateRange={dateRange}
+        />
       </CardContent>
     </Card>
   );
