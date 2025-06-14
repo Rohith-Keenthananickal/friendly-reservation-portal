@@ -12,7 +12,8 @@ import { DateRange } from 'react-day-picker';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import ReceiptView from '@/components/Receipt/ReceiptView';
 import BookingView from '@/components/Booking/BookingView';
-import { Hotel, FileText, Calendar } from 'lucide-react';
+import SettlementView from '@/components/Settlement/SettlementView';
+import { Hotel, FileText, Calendar, CreditCard } from 'lucide-react';
 
 const Index = () => {
   // Main tabs state
@@ -49,7 +50,7 @@ const Index = () => {
           onValueChange={setMainTab}
           className="w-full fade-up"
         >
-          <TabsList className="grid grid-cols-3 w-full max-w-md mx-auto mb-8">
+          <TabsList className="grid grid-cols-4 w-full max-w-2xl mx-auto mb-8">
             <TabsTrigger 
               value="reservation"
               className="flex items-center gap-2 px-4 py-2 data-[state=active]:bg-primary data-[state=active]:text-white"
@@ -70,6 +71,13 @@ const Index = () => {
             >
               <Calendar className="h-4 w-4" />
               Bookings
+            </TabsTrigger>
+            <TabsTrigger 
+              value="settlement"
+              className="flex items-center gap-2 px-4 py-2 data-[state=active]:bg-primary data-[state=active]:text-white"
+            >
+              <CreditCard className="h-4 w-4" />
+              Settlement
             </TabsTrigger>
           </TabsList>
 
@@ -132,6 +140,11 @@ const Index = () => {
           {/* Booking Tab Content */}
           <TabsContent value="booking" className="mt-0">
             <BookingView />
+          </TabsContent>
+
+          {/* Settlement Tab Content */}
+          <TabsContent value="settlement" className="mt-0">
+            <SettlementView />
           </TabsContent>
         </Tabs>
       </div>
