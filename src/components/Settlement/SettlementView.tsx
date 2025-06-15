@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -250,7 +249,7 @@ const SettlementView = () => {
               </TableHeader>
               <TableBody>
                 {filteredData.map((item) => (
-                  <React.Fragment key={item.id}>
+                  <Collapsible key={item.id} open={expandedRows.has(item.id)}>
                     <TableRow className="hover:bg-secondary/30">
                       <TableCell>
                         <CollapsibleTrigger asChild>
@@ -313,85 +312,83 @@ const SettlementView = () => {
                     </TableRow>
                     
                     {/* Advanced View - Expandable Content */}
-                    <TableRow className={expandedRows.has(item.id) ? "" : "hidden"}>
-                      <TableCell colSpan={8} className="p-0">
-                        <Collapsible open={expandedRows.has(item.id)}>
-                          <CollapsibleContent>
-                            <div className="p-6 bg-muted/20 border-t">
-                              <h4 className="font-medium mb-4 text-lg">Advanced Details</h4>
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                <div className="space-y-4">
-                                  <h5 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Booking Information</h5>
-                                  <div className="space-y-2">
-                                    <div className="flex justify-between">
-                                      <span className="text-sm">Booking Mode:</span>
-                                      <span className="text-sm font-medium">{item.bookingMode}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                      <span className="text-sm">Payment Mode:</span>
-                                      <span className="text-sm font-medium">{item.paymentMode}</span>
-                                    </div>
+                    <CollapsibleContent asChild>
+                      <TableRow>
+                        <TableCell colSpan={8} className="p-0">
+                          <div className="p-6 bg-muted/20 border-t">
+                            <h4 className="font-medium mb-4 text-lg">Advanced Details</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                              <div className="space-y-4">
+                                <h5 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Booking Information</h5>
+                                <div className="space-y-2">
+                                  <div className="flex justify-between">
+                                    <span className="text-sm">Booking Mode:</span>
+                                    <span className="text-sm font-medium">{item.bookingMode}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-sm">Payment Mode:</span>
+                                    <span className="text-sm font-medium">{item.paymentMode}</span>
                                   </div>
                                 </div>
-                                
-                                <div className="space-y-4">
-                                  <h5 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Payment Breakdown</h5>
-                                  <div className="space-y-2">
-                                    <div className="flex justify-between">
-                                      <span className="text-sm">Advance @ Payment Gateway (30%):</span>
-                                      <span className="text-sm font-medium">₹{item.advancePayment.toLocaleString()}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                      <span className="text-sm">Access Rooms Commission (10%):</span>
-                                      <span className="text-sm font-medium">₹{item.commission.toLocaleString()}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                      <span className="text-sm">Pay @ Property after Commission:</span>
-                                      <span className="text-sm font-medium">₹{item.payAfterCommission.toLocaleString()}</span>
-                                    </div>
-                                    <div className="flex justify-between border-t pt-2">
-                                      <span className="text-sm font-medium">Balance Payment:</span>
-                                      <span className="text-sm font-medium">₹{item.balancePayment.toLocaleString()}</span>
-                                    </div>
+                              </div>
+                              
+                              <div className="space-y-4">
+                                <h5 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Payment Breakdown</h5>
+                                <div className="space-y-2">
+                                  <div className="flex justify-between">
+                                    <span className="text-sm">Advance @ Payment Gateway (30%):</span>
+                                    <span className="text-sm font-medium">₹{item.advancePayment.toLocaleString()}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-sm">Access Rooms Commission (10%):</span>
+                                    <span className="text-sm font-medium">₹{item.commission.toLocaleString()}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-sm">Pay @ Property after Commission:</span>
+                                    <span className="text-sm font-medium">₹{item.payAfterCommission.toLocaleString()}</span>
+                                  </div>
+                                  <div className="flex justify-between border-t pt-2">
+                                    <span className="text-sm font-medium">Balance Payment:</span>
+                                    <span className="text-sm font-medium">₹{item.balancePayment.toLocaleString()}</span>
                                   </div>
                                 </div>
-                                
-                                <div className="space-y-4">
-                                  <h5 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Actions & Notes</h5>
-                                  <div className="space-y-3">
-                                    {item.hasPaymentSlip && (
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => handleViewSlip(item.id)}
-                                        className="w-full justify-start"
-                                      >
-                                        <FileText className="h-4 w-4 mr-2" />
-                                        View Payment Slip
+                              </div>
+                              
+                              <div className="space-y-4">
+                                <h5 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Actions & Notes</h5>
+                                <div className="space-y-3">
+                                  {item.hasPaymentSlip && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleViewSlip(item.id)}
+                                      className="w-full justify-start"
+                                    >
+                                      <FileText className="h-4 w-4 mr-2" />
+                                      View Payment Slip
+                                    </Button>
+                                  )}
+                                  <div className="space-y-2">
+                                    <label className="text-sm font-medium">Admin Notes:</label>
+                                    <div className="flex gap-2">
+                                      <Input
+                                        placeholder="Add notes..."
+                                        defaultValue={item.adminNotes}
+                                        className="text-sm"
+                                      />
+                                      <Button size="sm" variant="outline">
+                                        <Edit className="h-3 w-3" />
                                       </Button>
-                                    )}
-                                    <div className="space-y-2">
-                                      <label className="text-sm font-medium">Admin Notes:</label>
-                                      <div className="flex gap-2">
-                                        <Input
-                                          placeholder="Add notes..."
-                                          defaultValue={item.adminNotes}
-                                          className="text-sm"
-                                        />
-                                        <Button size="sm" variant="outline">
-                                          <Edit className="h-3 w-3" />
-                                        </Button>
-                                      </div>
                                     </div>
                                   </div>
                                 </div>
                               </div>
                             </div>
-                          </CollapsibleContent>
-                        </Collapsible>
-                      </TableCell>
-                    </TableRow>
-                  </React.Fragment>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    </CollapsibleContent>
+                  </Collapsible>
                 ))}
               </TableBody>
             </Table>
