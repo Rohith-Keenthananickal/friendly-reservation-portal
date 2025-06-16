@@ -85,7 +85,7 @@ const ReservationVoucher = () => {
   const componentRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = useReactToPrint({
-    content: () => componentRef.current,
+    contentRef: componentRef,
     documentTitle: `Reservation-Voucher-${mockVoucherData.reservation.reservationNumber}`,
   });
 
