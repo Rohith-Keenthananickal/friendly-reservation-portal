@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { LogOut, Ship, HomeIcon, Building2 } from 'lucide-react';
+import { LogOut, Ship, HomeIcon, Building2, FileText } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 const Sidebar = () => {
@@ -11,6 +11,7 @@ const Sidebar = () => {
     { name: 'Houseboat', icon: <Ship className="w-5 h-5" />, path: '/houseboat' },
     { name: 'Shikara', icon: <Ship className="w-5 h-5" />, path: '/shikara' },
     { name: 'Hotel', icon: <Building2 className="w-5 h-5" />, path: '/hotel' },
+    { name: 'Reservation Voucher', icon: <FileText className="w-5 h-5" />, path: '/reservation-voucher' },
   ];
 
   return (
