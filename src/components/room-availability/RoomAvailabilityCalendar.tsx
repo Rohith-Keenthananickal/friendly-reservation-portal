@@ -89,11 +89,110 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
   const calendarRef = useRef<FullCalendar>(null);
   const { toast } = useToast();
 
-  // Fetch hotels
+  // Mock data for hotels
+  const mockHotels: Hotel[] = [
+    { id: 'hotel-1', name: 'Grand Palace Hotel', location: 'Downtown' },
+    { id: 'hotel-2', name: 'Seaside Resort', location: 'Beach Front' },
+    { id: 'hotel-3', name: 'Mountain View Lodge', location: 'Hill Station' },
+  ];
+
+  // Mock data for room types
+  const mockRoomTypes: Record<string, RoomType[]> = {
+    'hotel-1': [
+      { id: 'deluxe', name: 'Deluxe Room', totalRooms: 20, description: 'Luxury room with city view' },
+      { id: 'suite', name: 'Executive Suite', totalRooms: 10, description: 'Spacious suite with premium amenities' },
+      { id: 'standard', name: 'Standard Room', totalRooms: 30, description: 'Comfortable standard accommodation' },
+    ],
+    'hotel-2': [
+      { id: 'ocean-view', name: 'Ocean View Room', totalRooms: 25, description: 'Room with stunning ocean views' },
+      { id: 'beach-villa', name: 'Beach Villa', totalRooms: 8, description: 'Private villa steps from the beach' },
+      { id: 'garden-room', name: 'Garden Room', totalRooms: 15, description: 'Peaceful room overlooking gardens' },
+    ],
+    'hotel-3': [
+      { id: 'mountain-suite', name: 'Mountain Suite', totalRooms: 12, description: 'Suite with mountain panorama' },
+      { id: 'cabin', name: 'Wooden Cabin', totalRooms: 6, description: 'Rustic cabin in the woods' },
+      { id: 'valley-room', name: 'Valley View Room', totalRooms: 18, description: 'Room overlooking the valley' },
+    ],
+  };
+
+  // Generate mock events
+  const generateMockEvents = (start: Date, end: Date, hotelId: string, roomTypeId: string): CalendarEvent[] => {
+    const events: CalendarEvent[] = [];
+    const currentDate = new Date(start);
+    const endDate = new Date(end);
+    
+    const selectedRoomTypeData = mockRoomTypes[hotelId]?.find(rt => rt.id === roomTypeId);
+    const totalRooms = selectedRoomTypeData?.totalRooms || 20;
+
+    while (currentDate <= endDate) {
+      const dateStr = currentDate.toISOString().split('T')[0];
+      
+      // Generate random availability
+      const reservedRooms = Math.floor(Math.random() * totalRooms);
+      const availableRooms = totalRooms - reservedRooms;
+      
+      // Add availability event for each day
+      events.push({
+        id: `availability-${dateStr}`,
+        title: `${availableRooms}/${totalRooms} Available`,
+        start: dateStr,
+        end: dateStr,
+        backgroundColor: availableRooms > 0 ? 'hsl(142 71% 45%)' : 'hsl(var(--muted))',
+        borderColor: availableRooms > 0 ? 'hsl(142 71% 45%)' : 'hsl(var(--muted))',
+        type: 'availability',
+        availableRooms,
+        totalRooms,
+        extendedProps: { 
+          type: 'availability',
+          availableRooms,
+          totalRooms,
+        },
+      });
+
+      // Randomly add some reservations
+      if (Math.random() > 0.7 && reservedRooms > 0) {
+        events.push({
+          id: `reservation-${dateStr}-${Math.random()}`,
+          title: `${Math.ceil(reservedRooms / 2)} Reservations`,
+          start: dateStr,
+          end: dateStr,
+          backgroundColor: 'hsl(var(--primary))',
+          borderColor: 'hsl(var(--primary))',
+          type: 'reservation',
+          extendedProps: { type: 'reservation' },
+        });
+      }
+
+      // Randomly add some blocks
+      if (Math.random() > 0.85) {
+        events.push({
+          id: `block-${dateStr}-${Math.random()}`,
+          title: 'Maintenance Block',
+          start: dateStr,
+          end: dateStr,
+          backgroundColor: 'hsl(var(--destructive))',
+          borderColor: 'hsl(var(--destructive))',
+          type: 'block',
+          reason: 'Scheduled maintenance',
+          extendedProps: { 
+            type: 'block',
+            reason: 'Scheduled maintenance'
+          },
+        });
+      }
+
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return events;
+  };
+
+  // Fetch hotels (using mock data)
   const fetchHotels = async () => {
     try {
-      const response = await axios.get('/api/hotels');
-      setHotels(response.data);
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setHotels(mockHotels);
     } catch (error) {
       toast({
         title: 'Error',
@@ -103,11 +202,12 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
     }
   };
 
-  // Fetch room types based on selected hotel
+  // Fetch room types based on selected hotel (using mock data)
   const fetchRoomTypes = async (hotelId: string) => {
     try {
-      const response = await axios.get(`/api/hotels/${hotelId}/room-types`);
-      setRoomTypes(response.data);
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 300));
+      setRoomTypes(mockRoomTypes[hotelId] || []);
     } catch (error) {
       toast({
         title: 'Error',
@@ -117,60 +217,17 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
     }
   };
 
-  // Fetch events from API
+  // Fetch events (using mock data)
   const fetchEvents = async (start: Date, end: Date) => {
     if (!selectedHotel || !selectedRoomType) return;
     
     try {
       setLoading(true);
-      const startDate = start.toISOString().split('T')[0];
-      const endDate = end.toISOString().split('T')[0];
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 800));
       
-      const response = await axios.get(
-        `/api/hotels/${selectedHotel}/room-types/${selectedRoomType}/availability`,
-        {
-          params: { start: startDate, end: endDate }
-        }
-      );
-
-      const formattedEvents: CalendarEvent[] = response.data.map((event: any) => {
-        if (event.type === 'availability') {
-          return {
-            id: event.id || `availability-${event.date}`,
-            title: `${event.availableRooms}/${event.totalRooms} Available`,
-            start: event.date,
-            end: event.date,
-            backgroundColor: event.availableRooms > 0 ? 'hsl(142 71% 45%)' : 'hsl(var(--muted))',
-            borderColor: event.availableRooms > 0 ? 'hsl(142 71% 45%)' : 'hsl(var(--muted))',
-            type: 'availability',
-            availableRooms: event.availableRooms,
-            totalRooms: event.totalRooms,
-            extendedProps: { 
-              ...event.extendedProps,
-              availableRooms: event.availableRooms,
-              totalRooms: event.totalRooms,
-            },
-          };
-        }
-        
-        return {
-          id: event.id,
-          title: event.title,
-          start: event.start,
-          end: event.end,
-          backgroundColor: event.type === 'reservation' 
-            ? 'hsl(var(--primary))' 
-            : 'hsl(var(--destructive))',
-          borderColor: event.type === 'reservation' 
-            ? 'hsl(var(--primary))' 
-            : 'hsl(var(--destructive))',
-          type: event.type,
-          reason: event.reason,
-          extendedProps: event.extendedProps || {},
-        };
-      });
-
-      setEvents(formattedEvents);
+      const mockEvents = generateMockEvents(start, end, selectedHotel, selectedRoomType);
+      setEvents(mockEvents);
     } catch (error) {
       toast({
         title: 'Error',
@@ -228,24 +285,33 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
     }
   };
 
-  // Create new block
+  // Create new block (using mock data)
   const createBlock = async () => {
     if (!selectedHotel || !selectedRoomType) return;
     
     try {
       setLoading(true);
-      const response = await axios.post(`/api/hotels/${selectedHotel}/room-types/${selectedRoomType}/block`, {
-        startDate: blockData.startDate,
-        endDate: blockData.endDate,
-        reason: blockData.reason,
-      });
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Refresh calendar
-      const calendarApi = calendarRef.current?.getApi();
-      if (calendarApi) {
-        const view = calendarApi.view;
-        await fetchEvents(view.activeStart, view.activeEnd);
-      }
+      // Create new block event
+      const newBlockEvent: CalendarEvent = {
+        id: `block-${Date.now()}`,
+        title: blockData.reason || 'Blocked',
+        start: blockData.startDate,
+        end: blockData.endDate,
+        backgroundColor: 'hsl(var(--destructive))',
+        borderColor: 'hsl(var(--destructive))',
+        type: 'block',
+        reason: blockData.reason,
+        extendedProps: { 
+          type: 'block',
+          reason: blockData.reason
+        },
+      };
+
+      // Add to events
+      setEvents(prevEvents => [...prevEvents, newBlockEvent]);
 
       toast({
         title: 'Success',
@@ -266,20 +332,17 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
     }
   };
 
-  // Delete block
+  // Delete block (using mock data)
   const deleteBlock = async () => {
-    if (!selectedEvent || !selectedHotel || !selectedRoomType) return;
+    if (!selectedEvent) return;
 
     try {
       setLoading(true);
-      await axios.delete(`/api/hotels/${selectedHotel}/room-types/${selectedRoomType}/block/${selectedEvent.id}`);
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Refresh calendar
-      const calendarApi = calendarRef.current?.getApi();
-      if (calendarApi) {
-        const view = calendarApi.view;
-        await fetchEvents(view.activeStart, view.activeEnd);
-      }
+      // Remove from events
+      setEvents(prevEvents => prevEvents.filter(event => event.id !== selectedEvent.id));
 
       toast({
         title: 'Success',
