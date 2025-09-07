@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { LogOut, Ship, HomeIcon, Building2, FileText, Receipt } from 'lucide-react';
+import { LogOut, Ship, HomeIcon, Building2, FileText, Receipt, Calendar } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 const Sidebar = () => {
@@ -13,6 +13,7 @@ const Sidebar = () => {
     { name: 'Hotel', icon: <Building2 className="w-5 h-5" />, path: '/hotel' },
     { name: 'Reservation Voucher', icon: <FileText className="w-5 h-5" />, path: '/reservation-voucher' },
     { name: 'Reservation Receipt', icon: <Receipt className="w-5 h-5" />, path: '/reservation-receipt' },
+    { name: 'Room Availability', icon: <Calendar className="w-5 h-5" />, path: '/room-availability' },
   ];
 
   return (
