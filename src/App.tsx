@@ -27,7 +27,7 @@ const App = () => (
           <Route path="/reservation-voucher" element={<ReservationVoucherPage />} />
           <Route path="/reservation-receipt" element={<ReservationReceiptPage />} />
           <Route path="/payment" element={<PaymentPage />} />
-          <Route path="/room-availability" element={<RoomAvailabilityCalendar roomId="1" />} />
+          <Route path="/room-availability" element={<RoomAvailabilityCalendar />} />
 
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

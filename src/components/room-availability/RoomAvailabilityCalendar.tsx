@@ -23,8 +23,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { CalendarDays, Ban, Trash2 } from 'lucide-react';
+import { CalendarDays, Ban, Trash2, Building2, BedDouble, Users, CheckCircle } from 'lucide-react';
 
 interface CalendarEvent {
   id: string;
@@ -33,9 +35,24 @@ interface CalendarEvent {
   end: string;
   backgroundColor: string;
   borderColor: string;
-  type: 'reservation' | 'block';
+  type: 'reservation' | 'block' | 'availability';
   reason?: string;
+  availableRooms?: number;
+  totalRooms?: number;
   extendedProps?: any;
+}
+
+interface Hotel {
+  id: string;
+  name: string;
+  location?: string;
+}
+
+interface RoomType {
+  id: string;
+  name: string;
+  totalRooms: number;
+  description?: string;
 }
 
 interface BlockData {
@@ -45,12 +62,10 @@ interface BlockData {
 }
 
 interface RoomAvailabilityCalendarProps {
-  roomId: string;
   className?: string;
 }
 
 const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
-  roomId,
   className = '',
 }) => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -67,38 +82,93 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [roomTypes, setRoomTypes] = useState<RoomType[]>([]);
+  const [selectedHotel, setSelectedHotel] = useState<string>('');
+  const [selectedRoomType, setSelectedRoomType] = useState<string>('');
   const calendarRef = useRef<FullCalendar>(null);
   const { toast } = useToast();
 
+  // Fetch hotels
+  const fetchHotels = async () => {
+    try {
+      const response = await axios.get('/api/hotels');
+      setHotels(response.data);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch hotels',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Fetch room types based on selected hotel
+  const fetchRoomTypes = async (hotelId: string) => {
+    try {
+      const response = await axios.get(`/api/hotels/${hotelId}/room-types`);
+      setRoomTypes(response.data);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch room types',
+        variant: 'destructive',
+      });
+    }
+  };
+
   // Fetch events from API
   const fetchEvents = async (start: Date, end: Date) => {
+    if (!selectedHotel || !selectedRoomType) return;
+    
     try {
       setLoading(true);
       const startDate = start.toISOString().split('T')[0];
       const endDate = end.toISOString().split('T')[0];
       
       const response = await axios.get(
-        `/api/rooms/${roomId}/availability`,
+        `/api/hotels/${selectedHotel}/room-types/${selectedRoomType}/availability`,
         {
           params: { start: startDate, end: endDate }
         }
       );
 
-      const formattedEvents: CalendarEvent[] = response.data.map((event: any) => ({
-        id: event.id,
-        title: event.title,
-        start: event.start,
-        end: event.end,
-        backgroundColor: event.type === 'reservation' 
-          ? 'hsl(var(--primary))' 
-          : 'hsl(var(--destructive))',
-        borderColor: event.type === 'reservation' 
-          ? 'hsl(var(--primary))' 
-          : 'hsl(var(--destructive))',
-        type: event.type,
-        reason: event.reason,
-        extendedProps: event.extendedProps || {},
-      }));
+      const formattedEvents: CalendarEvent[] = response.data.map((event: any) => {
+        if (event.type === 'availability') {
+          return {
+            id: event.id || `availability-${event.date}`,
+            title: `${event.availableRooms}/${event.totalRooms} Available`,
+            start: event.date,
+            end: event.date,
+            backgroundColor: event.availableRooms > 0 ? 'hsl(142 71% 45%)' : 'hsl(var(--muted))',
+            borderColor: event.availableRooms > 0 ? 'hsl(142 71% 45%)' : 'hsl(var(--muted))',
+            type: 'availability',
+            availableRooms: event.availableRooms,
+            totalRooms: event.totalRooms,
+            extendedProps: { 
+              ...event.extendedProps,
+              availableRooms: event.availableRooms,
+              totalRooms: event.totalRooms,
+            },
+          };
+        }
+        
+        return {
+          id: event.id,
+          title: event.title,
+          start: event.start,
+          end: event.end,
+          backgroundColor: event.type === 'reservation' 
+            ? 'hsl(var(--primary))' 
+            : 'hsl(var(--destructive))',
+          borderColor: event.type === 'reservation' 
+            ? 'hsl(var(--primary))' 
+            : 'hsl(var(--destructive))',
+          type: event.type,
+          reason: event.reason,
+          extendedProps: event.extendedProps || {},
+        };
+      });
 
       setEvents(formattedEvents);
     } catch (error) {
@@ -112,6 +182,19 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
       setLoading(false);
     }
   };
+
+  // Load initial data
+  useEffect(() => {
+    fetchHotels();
+  }, []);
+
+  // Load room types when hotel changes
+  useEffect(() => {
+    if (selectedHotel) {
+      fetchRoomTypes(selectedHotel);
+      setSelectedRoomType(''); // Reset room type selection
+    }
+  }, [selectedHotel]);
 
   // Handle date selection for blocking
   const handleDateSelect = (selectInfo: any) => {
@@ -147,9 +230,11 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
 
   // Create new block
   const createBlock = async () => {
+    if (!selectedHotel || !selectedRoomType) return;
+    
     try {
       setLoading(true);
-      const response = await axios.post(`/api/rooms/${roomId}/block`, {
+      const response = await axios.post(`/api/hotels/${selectedHotel}/room-types/${selectedRoomType}/block`, {
         startDate: blockData.startDate,
         endDate: blockData.endDate,
         reason: blockData.reason,
@@ -183,11 +268,11 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
 
   // Delete block
   const deleteBlock = async () => {
-    if (!selectedEvent) return;
+    if (!selectedEvent || !selectedHotel || !selectedRoomType) return;
 
     try {
       setLoading(true);
-      await axios.delete(`/api/rooms/${roomId}/block/${selectedEvent.id}`);
+      await axios.delete(`/api/hotels/${selectedHotel}/room-types/${selectedRoomType}/block/${selectedEvent.id}`);
 
       // Refresh calendar
       const calendarApi = calendarRef.current?.getApi();
@@ -216,58 +301,159 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
   };
 
   return (
-    <div className={`p-6 space-y-6 ${className}`}>
+    <div className={`space-y-6 ${className}`}>
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <CalendarDays className="h-6 w-6 text-primary" />
-          <h2 className="text-2xl font-semibold">Room Availability Calendar</h2>
-        </div>
-        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-          <div className="flex items-center space-x-1">
-            <div className="w-3 h-3 rounded bg-primary"></div>
-            <span>Reservations</span>
+      <div className="glass-panel p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <CalendarDays className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Room Availability Calendar</h1>
+              <p className="text-sm text-muted-foreground">Manage room availability and bookings</p>
+            </div>
           </div>
-          <div className="flex items-center space-x-1">
-            <div className="w-3 h-3 rounded bg-destructive"></div>
-            <span>Blocked</span>
+          <div className="flex items-center space-x-4 text-sm">
+            <Badge variant="outline" className="flex items-center space-x-1">
+              <div className="w-2 h-2 rounded-full bg-green-500"></div>
+              <span>Available</span>
+            </Badge>
+            <Badge variant="outline" className="flex items-center space-x-1">
+              <div className="w-2 h-2 rounded-full bg-primary"></div>
+              <span>Reservations</span>
+            </Badge>
+            <Badge variant="outline" className="flex items-center space-x-1">
+              <div className="w-2 h-2 rounded-full bg-destructive"></div>
+              <span>Blocked</span>
+            </Badge>
+          </div>
+        </div>
+
+        {/* Selection Controls */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="hotel-select" className="text-sm font-medium flex items-center space-x-2">
+              <Building2 className="h-4 w-4" />
+              <span>Select Hotel</span>
+            </Label>
+            <Select value={selectedHotel} onValueChange={setSelectedHotel}>
+              <SelectTrigger className="input-elegant">
+                <SelectValue placeholder="Choose a hotel" />
+              </SelectTrigger>
+              <SelectContent className="bg-popover border border-border shadow-lg">
+                {hotels.map((hotel) => (
+                  <SelectItem key={hotel.id} value={hotel.id}>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{hotel.name}</span>
+                      {hotel.location && (
+                        <span className="text-xs text-muted-foreground">{hotel.location}</span>
+                      )}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="room-type-select" className="text-sm font-medium flex items-center space-x-2">
+              <BedDouble className="h-4 w-4" />
+              <span>Select Room Type</span>
+            </Label>
+            <Select 
+              value={selectedRoomType} 
+              onValueChange={setSelectedRoomType}
+              disabled={!selectedHotel}
+            >
+              <SelectTrigger className="input-elegant">
+                <SelectValue placeholder="Choose a room type" />
+              </SelectTrigger>
+              <SelectContent className="bg-popover border border-border shadow-lg">
+                {roomTypes.map((roomType) => (
+                  <SelectItem key={roomType.id} value={roomType.id}>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{roomType.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {roomType.totalRooms} rooms total
+                      </span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
 
       {/* Calendar */}
-      <div className="bg-card rounded-lg border shadow-sm">
-        <FullCalendar
-          ref={calendarRef}
-          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-          headerToolbar={{
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay',
-          }}
-          initialView="dayGridMonth"
-          editable={true}
-          selectable={true}
-          selectMirror={true}
-          dayMaxEvents={true}
-          weekends={true}
-          events={events}
-          select={handleDateSelect}
-          eventClick={handleEventClick}
-          datesSet={(dateInfo) => {
-            fetchEvents(dateInfo.start, dateInfo.end);
-          }}
-          height="auto"
-          eventDisplay="block"
-          eventResizableFromStart={false}
-          eventDurationEditable={false}
-          selectAllow={(selectInfo) => {
-            // Only allow selection in the future
-            return selectInfo.start >= new Date();
-          }}
-          className="p-4"
-        />
-      </div>
+      {selectedHotel && selectedRoomType ? (
+        <Card className="card-elegant">
+          <CardContent className="p-0">
+            <div className="p-6">
+              <FullCalendar
+                ref={calendarRef}
+                plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+                headerToolbar={{
+                  left: 'prev,next today',
+                  center: 'title',
+                  right: 'dayGridMonth,timeGridWeek,timeGridDay',
+                }}
+                initialView="dayGridMonth"
+                editable={true}
+                selectable={true}
+                selectMirror={true}
+                dayMaxEvents={true}
+                weekends={true}
+                events={events}
+                select={handleDateSelect}
+                eventClick={handleEventClick}
+                datesSet={(dateInfo) => {
+                  fetchEvents(dateInfo.start, dateInfo.end);
+                }}
+                height="auto"
+                eventDisplay="block"
+                eventResizableFromStart={false}
+                eventDurationEditable={false}
+                selectAllow={(selectInfo) => {
+                  // Only allow selection in the future
+                  return selectInfo.start >= new Date();
+                }}
+                eventContent={(eventInfo) => {
+                  const { event } = eventInfo;
+                  if (event.extendedProps.type === 'availability') {
+                    return (
+                      <div className="p-1 text-xs font-medium text-center">
+                        <div className="flex items-center justify-center space-x-1">
+                          <Users className="h-3 w-3" />
+                          <span>{event.extendedProps.availableRooms}/{event.extendedProps.totalRooms}</span>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return { html: event.title };
+                }}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="card-elegant">
+          <CardContent className="p-12 text-center">
+            <div className="flex flex-col items-center space-y-4">
+              <div className="p-4 rounded-full bg-muted">
+                <CalendarDays className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-foreground">Select Hotel & Room Type</h3>
+                <p className="text-muted-foreground">
+                  Please select both a hotel and room type to view the availability calendar
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Create Block Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
