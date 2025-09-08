@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -39,7 +39,7 @@ interface CalendarEvent {
   reason?: string;
   availableRooms?: number;
   totalRooms?: number;
-  extendedProps?: any;
+  extendedProps?: Record<string, unknown>;
 }
 
 interface Hotel {
@@ -65,6 +65,32 @@ interface RoomAvailabilityCalendarProps {
   className?: string;
 }
 
+// Mock data for hotels
+const mockHotels: Hotel[] = [
+  { id: 'hotel-1', name: 'Grand Palace Hotel', location: 'Downtown' },
+  { id: 'hotel-2', name: 'Seaside Resort', location: 'Beach Front' },
+  { id: 'hotel-3', name: 'Mountain View Lodge', location: 'Hill Station' },
+];
+
+// Mock data for room types
+const mockRoomTypes: Record<string, RoomType[]> = {
+  'hotel-1': [
+    { id: 'deluxe', name: 'Deluxe Room', totalRooms: 20, description: 'Luxury room with city view' },
+    { id: 'suite', name: 'Executive Suite', totalRooms: 10, description: 'Spacious suite with premium amenities' },
+    { id: 'standard', name: 'Standard Room', totalRooms: 30, description: 'Comfortable standard accommodation' },
+  ],
+  'hotel-2': [
+    { id: 'ocean-view', name: 'Ocean View Room', totalRooms: 25, description: 'Room with stunning ocean views' },
+    { id: 'beach-villa', name: 'Beach Villa', totalRooms: 8, description: 'Private villa steps from the beach' },
+    { id: 'garden-room', name: 'Garden Room', totalRooms: 15, description: 'Peaceful room overlooking gardens' },
+  ],
+  'hotel-3': [
+    { id: 'mountain-suite', name: 'Mountain Suite', totalRooms: 12, description: 'Suite with mountain panorama' },
+    { id: 'cabin', name: 'Wooden Cabin', totalRooms: 6, description: 'Rustic cabin in the woods' },
+    { id: 'valley-room', name: 'Valley View Room', totalRooms: 18, description: 'Room overlooking the valley' },
+  ],
+};
+
 const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
   className = '',
 }) => {
@@ -89,32 +115,6 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
   const calendarRef = useRef<FullCalendar>(null);
   const { toast } = useToast();
 
-  // Mock data for hotels
-  const mockHotels: Hotel[] = [
-    { id: 'hotel-1', name: 'Grand Palace Hotel', location: 'Downtown' },
-    { id: 'hotel-2', name: 'Seaside Resort', location: 'Beach Front' },
-    { id: 'hotel-3', name: 'Mountain View Lodge', location: 'Hill Station' },
-  ];
-
-  // Mock data for room types
-  const mockRoomTypes: Record<string, RoomType[]> = {
-    'hotel-1': [
-      { id: 'deluxe', name: 'Deluxe Room', totalRooms: 20, description: 'Luxury room with city view' },
-      { id: 'suite', name: 'Executive Suite', totalRooms: 10, description: 'Spacious suite with premium amenities' },
-      { id: 'standard', name: 'Standard Room', totalRooms: 30, description: 'Comfortable standard accommodation' },
-    ],
-    'hotel-2': [
-      { id: 'ocean-view', name: 'Ocean View Room', totalRooms: 25, description: 'Room with stunning ocean views' },
-      { id: 'beach-villa', name: 'Beach Villa', totalRooms: 8, description: 'Private villa steps from the beach' },
-      { id: 'garden-room', name: 'Garden Room', totalRooms: 15, description: 'Peaceful room overlooking gardens' },
-    ],
-    'hotel-3': [
-      { id: 'mountain-suite', name: 'Mountain Suite', totalRooms: 12, description: 'Suite with mountain panorama' },
-      { id: 'cabin', name: 'Wooden Cabin', totalRooms: 6, description: 'Rustic cabin in the woods' },
-      { id: 'valley-room', name: 'Valley View Room', totalRooms: 18, description: 'Room overlooking the valley' },
-    ],
-  };
-
   // Generate mock events
   const generateMockEvents = (start: Date, end: Date, hotelId: string, roomTypeId: string): CalendarEvent[] => {
     const events: CalendarEvent[] = [];
@@ -137,8 +137,8 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
         title: `${availableRooms}/${totalRooms} Available`,
         start: dateStr,
         end: dateStr,
-        backgroundColor: availableRooms > 0 ? 'hsl(142 71% 45%)' : 'hsl(var(--muted))',
-        borderColor: availableRooms > 0 ? 'hsl(142 71% 45%)' : 'hsl(var(--muted))',
+        backgroundColor: availableRooms > 0 ? '#10B981' : 'hsl(var(--muted))',
+        borderColor: availableRooms > 0 ? '#10B981' : 'hsl(var(--muted))',
         type: 'availability',
         availableRooms,
         totalRooms,
@@ -156,8 +156,8 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
           title: `${Math.ceil(reservedRooms / 2)} Reservations`,
           start: dateStr,
           end: dateStr,
-          backgroundColor: 'hsl(var(--primary))',
-          borderColor: 'hsl(var(--primary))',
+          backgroundColor: '#3B82F6',
+          borderColor: '#3B82F6',
           type: 'reservation',
           extendedProps: { type: 'reservation' },
         });
@@ -170,8 +170,8 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
           title: 'Maintenance Block',
           start: dateStr,
           end: dateStr,
-          backgroundColor: 'hsl(var(--destructive))',
-          borderColor: 'hsl(var(--destructive))',
+          backgroundColor: '#EF4444',
+          borderColor: '#EF4444',
           type: 'block',
           reason: 'Scheduled maintenance',
           extendedProps: { 
@@ -188,7 +188,7 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
   };
 
   // Fetch hotels (using mock data)
-  const fetchHotels = async () => {
+  const fetchHotels = useCallback(async () => {
     try {
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -200,10 +200,10 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
         variant: 'destructive',
       });
     }
-  };
+  }, [toast]);
 
   // Fetch room types based on selected hotel (using mock data)
-  const fetchRoomTypes = async (hotelId: string) => {
+  const fetchRoomTypes = useCallback(async (hotelId: string) => {
     try {
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 300));
@@ -215,7 +215,7 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
         variant: 'destructive',
       });
     }
-  };
+  }, [toast]);
 
   // Fetch events (using mock data)
   const fetchEvents = async (start: Date, end: Date) => {
@@ -243,7 +243,7 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
   // Load initial data
   useEffect(() => {
     fetchHotels();
-  }, []);
+  }, [fetchHotels]);
 
   // Load room types when hotel changes
   useEffect(() => {
@@ -251,10 +251,10 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
       fetchRoomTypes(selectedHotel);
       setSelectedRoomType(''); // Reset room type selection
     }
-  }, [selectedHotel]);
+  }, [selectedHotel, fetchRoomTypes]);
 
   // Handle date selection for blocking
-  const handleDateSelect = (selectInfo: any) => {
+  const handleDateSelect = (selectInfo: { start: Date; end: Date }) => {
     const start = selectInfo.start.toISOString().split('T')[0];
     const end = selectInfo.end.toISOString().split('T')[0];
     
@@ -268,7 +268,7 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
   };
 
   // Handle event click (for deletion)
-  const handleEventClick = (clickInfo: any) => {
+  const handleEventClick = (clickInfo: { event: { id: string; title: string; start: Date; end: Date; backgroundColor: string; borderColor: string; extendedProps: Record<string, unknown> } }) => {
     const event = clickInfo.event;
     if (event.extendedProps.type === 'block') {
       setSelectedEvent({
@@ -278,8 +278,8 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
         end: event.end.toISOString(),
         backgroundColor: event.backgroundColor,
         borderColor: event.borderColor,
-        type: event.extendedProps.type,
-        reason: event.extendedProps.reason,
+        type: event.extendedProps.type as 'reservation' | 'block' | 'availability',
+        reason: event.extendedProps.reason as string,
       });
       setIsDeleteModalOpen(true);
     }
@@ -300,8 +300,8 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
         title: blockData.reason || 'Blocked',
         start: blockData.startDate,
         end: blockData.endDate,
-        backgroundColor: 'hsl(var(--destructive))',
-        borderColor: 'hsl(var(--destructive))',
+        backgroundColor: '#EF4444',
+        borderColor: '#EF4444',
         type: 'block',
         reason: blockData.reason,
         extendedProps: { 
@@ -366,27 +366,27 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Header */}
-      <div className="glass-panel p-6">
+      <div className="glass-panel p-6 fade-up">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <CalendarDays className="h-6 w-6 text-primary" />
+            <div className="p-2 rounded-lg bg-hotel-accent">
+              <CalendarDays className="h-6 w-6 text-hotel-primary" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Room Availability Calendar</h1>
+              <h1 className="text-2xl font-bold text-hotel-primary">Room Availability Calendar</h1>
               <p className="text-sm text-muted-foreground">Manage room availability and bookings</p>
             </div>
           </div>
           <div className="flex items-center space-x-4 text-sm">
-            <Badge variant="outline" className="flex items-center space-x-1">
+            <Badge variant="outline" className="flex items-center space-x-1 bg-green-50 border-green-200 text-green-700">
               <div className="w-2 h-2 rounded-full bg-green-500"></div>
               <span>Available</span>
             </Badge>
-            <Badge variant="outline" className="flex items-center space-x-1">
-              <div className="w-2 h-2 rounded-full bg-primary"></div>
+            <Badge variant="outline" className="flex items-center space-x-1 bg-blue-50 border-blue-200 text-blue-700">
+              <div className="w-2 h-2 rounded-full bg-hotel-highlight"></div>
               <span>Reservations</span>
             </Badge>
-            <Badge variant="outline" className="flex items-center space-x-1">
+            <Badge variant="outline" className="flex items-center space-x-1 bg-red-50 border-red-200 text-red-700">
               <div className="w-2 h-2 rounded-full bg-destructive"></div>
               <span>Blocked</span>
             </Badge>
@@ -394,9 +394,9 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
         </div>
 
         {/* Selection Controls */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 fade-up delay-1">
           <div className="space-y-2">
-            <Label htmlFor="hotel-select" className="text-sm font-medium flex items-center space-x-2">
+            <Label htmlFor="hotel-select" className="text-sm font-medium flex items-center space-x-2 text-hotel-primary">
               <Building2 className="h-4 w-4" />
               <span>Select Hotel</span>
             </Label>
@@ -420,7 +420,7 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="room-type-select" className="text-sm font-medium flex items-center space-x-2">
+            <Label htmlFor="room-type-select" className="text-sm font-medium flex items-center space-x-2 text-hotel-primary">
               <BedDouble className="h-4 w-4" />
               <span>Select Room Type</span>
             </Label>
@@ -451,7 +451,7 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
 
       {/* Calendar */}
       {selectedHotel && selectedRoomType ? (
-        <Card className="card-elegant">
+        <Card className="card-elegant fade-up delay-2">
           <CardContent className="p-0">
             <div className="p-6">
               <FullCalendar
@@ -501,14 +501,14 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
           </CardContent>
         </Card>
       ) : (
-        <Card className="card-elegant">
+        <Card className="card-elegant fade-up delay-2">
           <CardContent className="p-12 text-center">
             <div className="flex flex-col items-center space-y-4">
-              <div className="p-4 rounded-full bg-muted">
-                <CalendarDays className="h-8 w-8 text-muted-foreground" />
+              <div className="p-4 rounded-full bg-hotel-accent">
+                <CalendarDays className="h-8 w-8 text-hotel-primary" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-foreground">Select Hotel & Room Type</h3>
+                <h3 className="text-lg font-semibold text-hotel-primary">Select Hotel & Room Type</h3>
                 <p className="text-muted-foreground">
                   Please select both a hotel and room type to view the availability calendar
                 </p>
@@ -520,9 +520,9 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
 
       {/* Create Block Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] card-elegant">
           <DialogHeader>
-            <DialogTitle className="flex items-center space-x-2">
+            <DialogTitle className="flex items-center space-x-2 text-hotel-primary">
               <Ban className="h-5 w-5 text-destructive" />
               <span>Block Room Dates</span>
             </DialogTitle>
@@ -534,7 +534,7 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="start-date">Start Date</Label>
+                <Label htmlFor="start-date" className="text-hotel-primary font-medium">Start Date</Label>
                 <Input
                   id="start-date"
                   type="date"
@@ -542,10 +542,11 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
                   onChange={(e) =>
                     setBlockData({ ...blockData, startDate: e.target.value })
                   }
+                  className="input-elegant"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="end-date">End Date</Label>
+                <Label htmlFor="end-date" className="text-hotel-primary font-medium">End Date</Label>
                 <Input
                   id="end-date"
                   type="date"
@@ -553,12 +554,13 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
                   onChange={(e) =>
                     setBlockData({ ...blockData, endDate: e.target.value })
                   }
+                  className="input-elegant"
                 />
               </div>
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="reason">Reason for Blocking</Label>
+              <Label htmlFor="reason" className="text-hotel-primary font-medium">Reason for Blocking</Label>
               <Textarea
                 id="reason"
                 placeholder="Enter reason for blocking these dates..."
@@ -566,7 +568,7 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
                 onChange={(e) =>
                   setBlockData({ ...blockData, reason: e.target.value })
                 }
-                className="min-h-[80px]"
+                className="min-h-[80px] input-elegant"
               />
             </div>
           </div>
@@ -575,13 +577,14 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
             <Button
               variant="outline"
               onClick={() => setIsModalOpen(false)}
+              className="focus-ring"
             >
               Cancel
             </Button>
             <Button
               onClick={createBlock}
               disabled={loading || !blockData.reason.trim()}
-              className="bg-destructive hover:bg-destructive/90"
+              className="bg-destructive hover:bg-destructive/90 focus-ring"
             >
               {loading ? 'Creating...' : 'Block Dates'}
             </Button>
@@ -591,9 +594,9 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
 
       {/* Delete Block Modal */}
       <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] card-elegant">
           <DialogHeader>
-            <DialogTitle className="flex items-center space-x-2">
+            <DialogTitle className="flex items-center space-x-2 text-hotel-primary">
               <Trash2 className="h-5 w-5 text-destructive" />
               <span>Delete Block</span>
             </DialogTitle>
@@ -605,11 +608,11 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
           {selectedEvent && (
             <div className="py-4 space-y-2">
               <div className="text-sm">
-                <strong>Dates:</strong> {new Date(selectedEvent.start).toLocaleDateString()} - {new Date(selectedEvent.end).toLocaleDateString()}
+                <strong className="text-hotel-primary">Dates:</strong> {new Date(selectedEvent.start).toLocaleDateString()} - {new Date(selectedEvent.end).toLocaleDateString()}
               </div>
               {selectedEvent.reason && (
                 <div className="text-sm">
-                  <strong>Reason:</strong> {selectedEvent.reason}
+                  <strong className="text-hotel-primary">Reason:</strong> {selectedEvent.reason}
                 </div>
               )}
             </div>
@@ -619,6 +622,7 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
             <Button
               variant="outline"
               onClick={() => setIsDeleteModalOpen(false)}
+              className="focus-ring"
             >
               Cancel
             </Button>
@@ -626,6 +630,7 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
               variant="destructive"
               onClick={deleteBlock}
               disabled={loading}
+              className="focus-ring"
             >
               {loading ? 'Deleting...' : 'Delete Block'}
             </Button>

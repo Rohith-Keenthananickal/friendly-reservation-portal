@@ -10,6 +10,7 @@ import PaymentPage from "./pages/PaymentPage";
 import ReservationVoucherPage from "./pages/ReservationVoucherPage";
 import ReservationReceiptPage from "./pages/ReservationReceiptPage";
 import RoomAvailabilityCalendar from "./components/room-availability/RoomAvailabilityCalendar";
+import Layout from "./components/Layout";
 
 const queryClient = new QueryClient();
 
@@ -27,7 +28,7 @@ const App = () => (
           <Route path="/reservation-voucher" element={<ReservationVoucherPage />} />
           <Route path="/reservation-receipt" element={<ReservationReceiptPage />} />
           <Route path="/payment" element={<PaymentPage />} />
-          <Route path="/room-availability" element={<RoomAvailabilityCalendar />} />
+          <Route path="/room-availability" element={<Layout><RoomAvailabilityCalendar /></Layout>} />
 
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
