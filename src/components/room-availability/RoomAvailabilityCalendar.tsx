@@ -26,7 +26,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { CalendarDays, Ban, Trash2, Building2, BedDouble, Users, CheckCircle } from 'lucide-react';
+import { CalendarDays, Ban, Trash2, Building2, BedDouble, Users, CheckCircle, Calendar, BookOpen, AlertTriangle } from 'lucide-react';
 
 interface CalendarEvent {
   id: string;
@@ -35,10 +35,11 @@ interface CalendarEvent {
   end: string;
   backgroundColor: string;
   borderColor: string;
-  type: 'reservation' | 'block' | 'availability';
+  type: 'reservation' | 'block' | 'availability' | 'maintenance' | 'booking';
   reason?: string;
   availableRooms?: number;
   totalRooms?: number;
+  roomsAffected?: number;
   extendedProps?: Record<string, unknown>;
 }
 
@@ -55,10 +56,12 @@ interface RoomType {
   description?: string;
 }
 
-interface BlockData {
+interface ActionData {
   startDate: string;
   endDate: string;
   reason: string;
+  actionType: 'booking' | 'block' | 'maintenance';
+  roomsAffected: number[];
 }
 
 interface RoomAvailabilityCalendarProps {
@@ -100,10 +103,12 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
     start: string;
     end: string;
   } | null>(null);
-  const [blockData, setBlockData] = useState<BlockData>({
+  const [actionData, setActionData] = useState<ActionData>({
     startDate: '',
     endDate: '',
     reason: '',
+    actionType: 'booking',
+    roomsAffected: [],
   });
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -259,10 +264,12 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
     const end = selectInfo.end.toISOString().split('T')[0];
     
     setSelectedDates({ start, end });
-    setBlockData({
+    setActionData({
       startDate: start,
       endDate: end,
       reason: '',
+      actionType: 'booking',
+      roomsAffected: [],
     });
     setIsModalOpen(true);
   };
@@ -285,8 +292,8 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
     }
   };
 
-  // Create new block (using mock data)
-  const createBlock = async () => {
+  // Create new action (using mock data)
+  const createAction = async () => {
     if (!selectedHotel || !selectedRoomType) return;
     
     try {
@@ -294,24 +301,32 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Create new block event
-      const newBlockEvent: CalendarEvent = {
-        id: `block-${Date.now()}`,
-        title: blockData.reason || 'Blocked',
-        start: blockData.startDate,
-        end: blockData.endDate,
-        backgroundColor: '#EF4444',
-        borderColor: '#EF4444',
-        type: 'block',
-        reason: blockData.reason,
+      // Create new event based on action type
+      const colors = {
+        booking: { bg: '#3B82F6', border: '#3B82F6' },
+        block: { bg: '#EF4444', border: '#EF4444' },
+        maintenance: { bg: '#F59E0B', border: '#F59E0B' },
+      };
+      
+      const newEvent: CalendarEvent = {
+        id: `${actionData.actionType}-${Date.now()}`,
+        title: `${actionData.reason || actionData.actionType} (${actionData.roomsAffected.length} rooms)`,
+        start: actionData.startDate,
+        end: actionData.endDate,
+        backgroundColor: colors[actionData.actionType].bg,
+        borderColor: colors[actionData.actionType].border,
+        type: actionData.actionType as 'reservation' | 'block' | 'availability' | 'maintenance' | 'booking',
+        reason: actionData.reason,
+        roomsAffected: actionData.roomsAffected.length,
         extendedProps: { 
-          type: 'block',
-          reason: blockData.reason
+          type: actionData.actionType,
+          reason: actionData.reason,
+          roomsAffected: actionData.roomsAffected.length
         },
       };
 
       // Add to events
-      setEvents(prevEvents => [...prevEvents, newBlockEvent]);
+      setEvents(prevEvents => [...prevEvents, newEvent]);
 
       toast({
         title: 'Success',
@@ -319,7 +334,7 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
       });
 
       setIsModalOpen(false);
-      setBlockData({ startDate: '', endDate: '', reason: '' });
+      setActionData({ startDate: '', endDate: '', reason: '', actionType: 'booking', roomsAffected: [] });
     } catch (error) {
       toast({
         title: 'Error',
@@ -449,6 +464,75 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
         </div>
       </div>
 
+      {/* Summary Statistics */}
+      {selectedHotel && selectedRoomType && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 fade-up delay-1">
+          <Card className="card-elegant">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 rounded-lg bg-hotel-accent">
+                  <Building2 className="h-5 w-5 text-hotel-primary" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Rooms</p>
+                  <p className="text-2xl font-bold text-hotel-primary">
+                    {roomTypes.find(rt => rt.id === selectedRoomType)?.totalRooms || 0}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="card-elegant">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 rounded-lg bg-green-100">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Available</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {events.filter(e => e.type === 'availability' && e.availableRooms && e.availableRooms > 0).length}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="card-elegant">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 rounded-lg bg-blue-100">
+                  <BookOpen className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Bookings</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {events.filter(e => e.type === 'reservation' || e.type === 'booking').length}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="card-elegant">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 rounded-lg bg-red-100">
+                  <AlertTriangle className="h-5 w-5 text-red-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Blocked/Maintenance</p>
+                  <p className="text-2xl font-bold text-red-600">
+                    {events.filter(e => e.type === 'block' || e.type === 'maintenance').length}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Calendar */}
       {selectedHotel && selectedRoomType ? (
         <Card className="card-elegant fade-up delay-2">
@@ -523,24 +607,43 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
         <DialogContent className="sm:max-w-[425px] card-elegant">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2 text-hotel-primary">
-              <Ban className="h-5 w-5 text-destructive" />
-              <span>Block Room Dates</span>
+              <Calendar className="h-5 w-5 text-hotel-primary" />
+              <span>Manage Room Availability</span>
             </DialogTitle>
             <DialogDescription>
-              Block the selected date range for this room. Blocked dates will not be available for bookings.
+              Book, block, or set maintenance for the selected date range and rooms.
             </DialogDescription>
           </DialogHeader>
           
           <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="action-type" className="text-hotel-primary font-medium">Action Type</Label>
+              <Select 
+                value={actionData.actionType} 
+                onValueChange={(value: 'booking' | 'block' | 'maintenance') => 
+                  setActionData({ ...actionData, actionType: value })
+                }
+              >
+                <SelectTrigger className="input-elegant">
+                  <SelectValue placeholder="Select action type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="booking">Mark as Booked</SelectItem>
+                  <SelectItem value="block">Block Rooms</SelectItem>
+                  <SelectItem value="maintenance">Maintenance</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="start-date" className="text-hotel-primary font-medium">Start Date</Label>
                 <Input
                   id="start-date"
                   type="date"
-                  value={blockData.startDate}
+                  value={actionData.startDate}
                   onChange={(e) =>
-                    setBlockData({ ...blockData, startDate: e.target.value })
+                    setActionData({ ...actionData, startDate: e.target.value })
                   }
                   className="input-elegant"
                 />
@@ -550,23 +653,48 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
                 <Input
                   id="end-date"
                   type="date"
-                  value={blockData.endDate}
+                  value={actionData.endDate}
                   onChange={(e) =>
-                    setBlockData({ ...blockData, endDate: e.target.value })
+                    setActionData({ ...actionData, endDate: e.target.value })
                   }
                   className="input-elegant"
                 />
               </div>
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="rooms-affected" className="text-hotel-primary font-medium">Rooms Affected</Label>
+              <Select 
+                value={actionData.roomsAffected.length > 0 ? actionData.roomsAffected.join(',') : ''} 
+                onValueChange={(value) => {
+                  const rooms = value ? value.split(',').map(Number) : [];
+                  setActionData({ ...actionData, roomsAffected: rooms });
+                }}
+              >
+                <SelectTrigger className="input-elegant">
+                  <SelectValue placeholder="Select rooms (1-20)" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 20 }, (_, i) => i + 1).map((num) => (
+                    <SelectItem key={num} value={num.toString()}>
+                      Room {num}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Selected: {actionData.roomsAffected.length} room(s)</p>
+            </div>
             
             <div className="space-y-2">
-              <Label htmlFor="reason" className="text-hotel-primary font-medium">Reason for Blocking</Label>
+              <Label htmlFor="reason" className="text-hotel-primary font-medium">
+                Reason {actionData.actionType === 'booking' ? 'for Booking' : actionData.actionType === 'block' ? 'for Blocking' : 'for Maintenance'}
+              </Label>
               <Textarea
                 id="reason"
-                placeholder="Enter reason for blocking these dates..."
-                value={blockData.reason}
+                placeholder={`Enter reason for ${actionData.actionType}...`}
+                value={actionData.reason}
                 onChange={(e) =>
-                  setBlockData({ ...blockData, reason: e.target.value })
+                  setActionData({ ...actionData, reason: e.target.value })
                 }
                 className="min-h-[80px] input-elegant"
               />
@@ -582,11 +710,11 @@ const RoomAvailabilityCalendar: React.FC<RoomAvailabilityCalendarProps> = ({
               Cancel
             </Button>
             <Button
-              onClick={createBlock}
-              disabled={loading || !blockData.reason.trim()}
+              onClick={createAction}
+              disabled={loading || !actionData.reason.trim() || actionData.roomsAffected.length === 0}
               className="bg-destructive hover:bg-destructive/90 focus-ring"
             >
-              {loading ? 'Creating...' : 'Block Dates'}
+              {loading ? 'Creating...' : `${actionData.actionType === 'booking' ? 'Book' : actionData.actionType === 'block' ? 'Block' : 'Set Maintenance'}`}
             </Button>
           </DialogFooter>
         </DialogContent>
