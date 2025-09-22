@@ -121,7 +121,7 @@ const mockBookingData = [
 
 const PaymentView = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [bookingModeFilter, setBookingModeFilter] = useState('');
+  const [bookingModeFilter, setBookingModeFilter] = useState('all');
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
   // Filter data
@@ -130,7 +130,7 @@ const PaymentView = () => {
       booking.guestName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       booking.reservationNumber.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesBookingMode = bookingModeFilter === '' || booking.bookingMode === bookingModeFilter;
+    const matchesBookingMode = bookingModeFilter === 'all' || booking.bookingMode === bookingModeFilter;
     
     // Date range filtering logic can be added here
     
@@ -216,7 +216,7 @@ const PaymentView = () => {
                 <SelectValue placeholder="Filter by booking mode" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Booking Modes</SelectItem>
+                <SelectItem value="all">All Booking Modes</SelectItem>
                 <SelectItem value="Access Rooms">Access Rooms</SelectItem>
                 <SelectItem value="OTA">OTA</SelectItem>
                 <SelectItem value="Agent">Agent</SelectItem>
