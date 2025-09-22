@@ -18,8 +18,8 @@ const mockBookingData = [
     dateOut: '2024-01-18',
     guestName: 'John Smith',
     reservationNumber: 'RES001',
-    bookingMode: 'OTA',
-    companyAgentName: 'Booking.com',
+    bookingMode: 'Agent',
+    companyAgentName: 'Travel Pro Agency',
     pendingAmount: 5000,
     paymentMode: 'Credit Card',
     advanceAmount: 15000,
@@ -31,13 +31,7 @@ const mockBookingData = [
     finalStatus: 'Pending',
     commissionAmount: 2000,
     hotelAmount: 18000,
-    paymentBy: 'Guest',
-    roomType: 'Deluxe Room',
-    roomNo: '101',
-    numberOfDays: 3,
-    bookingType: 'Pay at Hotel',
-    bookingStatus: 'Confirmed',
-    bookingAmount: 20000
+    paymentBy: 'Guest'
   },
   {
     id: 2,
@@ -45,8 +39,8 @@ const mockBookingData = [
     dateOut: '2024-01-23',
     guestName: 'Sarah Johnson',
     reservationNumber: 'RES002',
-    bookingMode: 'OTA',
-    companyAgentName: 'Agoda',
+    bookingMode: 'Direct',
+    companyAgentName: '-',
     pendingAmount: 0,
     paymentMode: 'UPI',
     advanceAmount: 12000,
@@ -56,15 +50,9 @@ const mockBookingData = [
     transactionNumber: 'UPI789012',
     atmServiceCharges: 0,
     finalStatus: 'Paid',
-    commissionAmount: 1800,
-    hotelAmount: 10200,
-    paymentBy: 'Guest',
-    roomType: 'Standard Room',
-    roomNo: '205',
-    numberOfDays: 3,
-    bookingType: 'Paid Online',
-    bookingStatus: 'Checked-in',
-    bookingAmount: 12000
+    commissionAmount: 0,
+    hotelAmount: 12000,
+    paymentBy: 'Guest'
   },
   {
     id: 3,
@@ -72,8 +60,8 @@ const mockBookingData = [
     dateOut: '2024-01-28',
     guestName: 'Mike Wilson',
     reservationNumber: 'RES003',
-    bookingMode: 'OTA',
-    companyAgentName: 'Expedia',
+    bookingMode: 'Access Rooms',
+    companyAgentName: 'Access Rooms Portal',
     pendingAmount: 8000,
     paymentMode: 'Net Banking',
     advanceAmount: 10000,
@@ -83,15 +71,9 @@ const mockBookingData = [
     transactionNumber: 'NET345678',
     atmServiceCharges: 150,
     finalStatus: 'Partial',
-    commissionAmount: 2700,
-    hotelAmount: 15300,
-    paymentBy: 'Agent',
-    roomType: 'Suite',
-    roomNo: '301',
-    numberOfDays: 3,
-    bookingType: 'Pay at Hotel',
-    bookingStatus: 'Confirmed',
-    bookingAmount: 18000
+    commissionAmount: 1800,
+    hotelAmount: 16200,
+    paymentBy: 'Agent'
   },
   {
     id: 4,
@@ -100,7 +82,7 @@ const mockBookingData = [
     guestName: 'Emma Davis',
     reservationNumber: 'RES004',
     bookingMode: 'OTA',
-    companyAgentName: 'MakeMyTrip',
+    companyAgentName: 'Booking.com',
     pendingAmount: 0,
     paymentMode: 'Online',
     advanceAmount: 25000,
@@ -112,13 +94,7 @@ const mockBookingData = [
     finalStatus: 'Paid',
     commissionAmount: 3750,
     hotelAmount: 21250,
-    paymentBy: 'Online',
-    roomType: 'Premium Room',
-    roomNo: '401',
-    numberOfDays: 3,
-    bookingType: 'Paid Online',
-    bookingStatus: 'Checked-out',
-    bookingAmount: 25000
+    paymentBy: 'Online'
   },
   {
     id: 5,
@@ -126,8 +102,8 @@ const mockBookingData = [
     dateOut: '2024-02-08',
     guestName: 'David Brown',
     reservationNumber: 'RES005',
-    bookingMode: 'OTA',
-    companyAgentName: 'Goibibo',
+    bookingMode: 'Company',
+    companyAgentName: 'Tech Corp Ltd',
     pendingAmount: 15000,
     paymentMode: 'Cheque',
     advanceAmount: 20000,
@@ -137,62 +113,28 @@ const mockBookingData = [
     transactionNumber: 'CHQ567890',
     atmServiceCharges: 0,
     finalStatus: 'Pending',
-    commissionAmount: 5250,
-    hotelAmount: 29750,
-    paymentBy: 'Company',
-    roomType: 'Executive Suite',
-    roomNo: '501',
-    numberOfDays: 3,
-    bookingType: 'Pay at Hotel',
-    bookingStatus: 'Cancelled',
-    bookingAmount: 35000
-  },
-  {
-    id: 6,
-    dateIn: '2024-02-10',
-    dateOut: '2024-02-13',
-    guestName: 'Lisa Anderson',
-    reservationNumber: 'RES006',
-    bookingMode: 'OTA',
-    companyAgentName: 'Cleartrip',
-    pendingAmount: 2000,
-    paymentMode: 'Credit Card',
-    advanceAmount: 14000,
-    advanceDate: '2024-02-05',
-    balanceAmount: 2000,
-    balanceDate: null,
-    transactionNumber: 'CC112233',
-    atmServiceCharges: 50,
-    finalStatus: 'Partial',
-    commissionAmount: 2400,
-    hotelAmount: 13600,
-    paymentBy: 'Guest',
-    roomType: 'Deluxe Room',
-    roomNo: '102',
-    numberOfDays: 3,
-    bookingType: 'Pay at Hotel',
-    bookingStatus: 'Confirmed',
-    bookingAmount: 16000
+    commissionAmount: 0,
+    hotelAmount: 35000,
+    paymentBy: 'Company'
   }
 ];
 
 const PaymentView = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [bookingModeFilter, setBookingModeFilter] = useState('OTA');
+  const [bookingModeFilter, setBookingModeFilter] = useState('all');
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
-  // Filter data - Show only OTA bookings
+  // Filter data
   const filteredData = mockBookingData.filter(booking => {
     const matchesSearch = searchTerm === '' || 
       booking.guestName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       booking.reservationNumber.toLowerCase().includes(searchTerm.toLowerCase());
     
-    // Only show OTA bookings
-    const isOTA = booking.bookingMode === 'OTA';
+    const matchesBookingMode = bookingModeFilter === 'all' || booking.bookingMode === bookingModeFilter;
     
     // Date range filtering logic can be added here
     
-    return matchesSearch && isOTA;
+    return matchesSearch && matchesBookingMode;
   });
 
   // Calculate summary statistics
@@ -203,26 +145,11 @@ const PaymentView = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'Paid':
-        return <Badge className="status-paid">Paid</Badge>;
+        return <Badge className="status-paid border">Paid</Badge>;
       case 'Pending':
-        return <Badge className="status-pending">Pending</Badge>;
+        return <Badge className="status-pending border">Pending</Badge>;
       case 'Partial':
-        return <Badge className="status-partial">Partial</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
-    }
-  };
-
-  const getBookingStatusBadge = (status: string) => {
-    switch (status) {
-      case 'Confirmed':
-        return <Badge variant="outline" className="text-blue-600 border-blue-600">Confirmed</Badge>;
-      case 'Checked-in':
-        return <Badge variant="outline" className="text-green-600 border-green-600">Checked-in</Badge>;
-      case 'Checked-out':
-        return <Badge variant="outline" className="text-gray-600 border-gray-600">Checked-out</Badge>;
-      case 'Cancelled':
-        return <Badge variant="outline" className="text-red-600 border-red-600">Cancelled</Badge>;
+        return <Badge className="status-partial border">Partial</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
@@ -255,8 +182,8 @@ const PaymentView = () => {
       {/* User Details & Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">OTA Booking Details</h1>
-          <p className="text-muted-foreground">Manage OTA bookings and payment settlements</p>
+          <h1 className="text-3xl font-bold text-foreground">Payment Management</h1>
+          <p className="text-muted-foreground">Manage bookings and payment settlements</p>
         </div>
         <div className="flex items-center space-x-3">
           <Avatar>
@@ -286,16 +213,15 @@ const PaymentView = () => {
             
             <Select value={bookingModeFilter} onValueChange={setBookingModeFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="OTA Platform" />
+                <SelectValue placeholder="Filter by booking mode" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="OTA">All OTA Platforms</SelectItem>
-                <SelectItem value="Booking.com">Booking.com</SelectItem>
-                <SelectItem value="Agoda">Agoda</SelectItem>
-                <SelectItem value="Expedia">Expedia</SelectItem>
-                <SelectItem value="MakeMyTrip">MakeMyTrip</SelectItem>
-                <SelectItem value="Goibibo">Goibibo</SelectItem>
-                <SelectItem value="Cleartrip">Cleartrip</SelectItem>
+                <SelectItem value="all">All Booking Modes</SelectItem>
+                <SelectItem value="Access Rooms">Access Rooms</SelectItem>
+                <SelectItem value="OTA">OTA</SelectItem>
+                <SelectItem value="Agent">Agent</SelectItem>
+                <SelectItem value="Company">Company</SelectItem>
+                <SelectItem value="Direct">Direct</SelectItem>
               </SelectContent>
             </Select>
 
@@ -358,41 +284,76 @@ const PaymentView = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Guest Name</TableHead>
-                  <TableHead>Booking ID</TableHead>
-                  <TableHead>Room Type</TableHead>
-                  <TableHead>Room No.</TableHead>
-                  <TableHead>No. of Days</TableHead>
-                  <TableHead>Booking Type</TableHead>
-                  <TableHead>Booking Status</TableHead>
-                  <TableHead>Booking Amount</TableHead>
-                  <TableHead>Payment Status</TableHead>
-                  <TableHead>Details</TableHead>
+                  <TableHead>SL No</TableHead>
+                  <TableHead>Date In / Out</TableHead>
+                  <TableHead>Guest / Reservation</TableHead>
+                  <TableHead>Booking Mode</TableHead>
+                  <TableHead>Company/Agent</TableHead>
+                  <TableHead>Pending Amount</TableHead>
+                  <TableHead>Payment Mode</TableHead>
+                  <TableHead>Advance Payment</TableHead>
+                  <TableHead>Balance Payment</TableHead>
+                  <TableHead>Transaction No</TableHead>
+                  <TableHead>ATM Charges</TableHead>
+                  <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredData.map((booking, index) => (
                   <TableRow key={booking.id}>
-                    <TableCell className="font-medium">{booking.guestName}</TableCell>
-                    <TableCell className="text-sm font-mono">{booking.reservationNumber}</TableCell>
+                    <TableCell className="font-medium">{index + 1}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">{booking.roomType}</Badge>
+                      <div className="text-sm">
+                        <div>In: {formatDate(booking.dateIn)}</div>
+                        <div>Out: {formatDate(booking.dateOut)}</div>
+                      </div>
                     </TableCell>
-                    <TableCell className="font-medium">{booking.roomNo}</TableCell>
-                    <TableCell className="text-center">{booking.numberOfDays}</TableCell>
                     <TableCell>
-                      <Badge variant={booking.bookingType === 'Paid Online' ? 'default' : 'secondary'}>
-                        {booking.bookingType}
-                      </Badge>
+                      <div className="text-sm">
+                        <div className="font-medium">{booking.guestName}</div>
+                        <div className="text-muted-foreground">{booking.reservationNumber}</div>
+                      </div>
                     </TableCell>
-                    <TableCell>{getBookingStatusBadge(booking.bookingStatus)}</TableCell>
-                    <TableCell className="font-medium">{formatCurrency(booking.bookingAmount)}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{booking.bookingMode}</Badge>
+                    </TableCell>
+                    <TableCell className="text-sm">{booking.companyAgentName}</TableCell>
+                    <TableCell>
+                      {booking.pendingAmount > 0 ? (
+                        <span className="text-red-600 font-medium">{formatCurrency(booking.pendingAmount)}</span>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <CreditCard className="h-3 w-3" />
+                        <span className="text-sm">{booking.paymentMode}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        <div className="font-medium">{formatCurrency(booking.advanceAmount)}</div>
+                        <div className="text-muted-foreground">{formatDate(booking.advanceDate)}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        <div className="font-medium">
+                          {booking.balanceAmount ? formatCurrency(booking.balanceAmount) : '-'}
+                        </div>
+                        <div className="text-muted-foreground">{formatDate(booking.balanceDate)}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm font-mono">{booking.transactionNumber}</TableCell>
+                    <TableCell>
+                      {booking.atmServiceCharges > 0 ? (
+                        <span className="text-orange-600">{formatCurrency(booking.atmServiceCharges)}</span>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
                     <TableCell>{getStatusBadge(booking.finalStatus)}</TableCell>
-                    <TableCell>
-                      <Button variant="outline" size="sm">
-                        View Details
-                      </Button>
-                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
