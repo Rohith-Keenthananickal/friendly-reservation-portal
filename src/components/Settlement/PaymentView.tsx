@@ -145,11 +145,11 @@ const PaymentView = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'Paid':
-        return <Badge className="status-paid border">Paid</Badge>;
+        return <Badge className="status-paid">Paid</Badge>;
       case 'Pending':
-        return <Badge className="status-pending border">Pending</Badge>;
+        return <Badge className="status-pending">Pending</Badge>;
       case 'Partial':
-        return <Badge className="status-partial border">Partial</Badge>;
+        return <Badge className="status-partial">Partial</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
