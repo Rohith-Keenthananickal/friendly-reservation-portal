@@ -1,13 +1,13 @@
 import React from 'react';
 import SettlementLayout from '@/components/Settlement/SettlementLayout';
-import NewPaymentView from '@/components/Settlement/NewPaymentView';
+import OutstandingView from '@/components/Settlement/OutstandingView';
 
-const PaymentPage = () => {
+const OutstandingPage = () => {
   return (
     <SettlementLayout>
-      <NewPaymentView />
+      <OutstandingView />
     </SettlementLayout>
   );
 };
 
-export default PaymentPage;
+export default OutstandingPage;

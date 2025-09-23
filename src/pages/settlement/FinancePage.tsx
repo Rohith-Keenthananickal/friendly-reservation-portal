@@ -1,11 +1,11 @@
 import React from 'react';
-import Layout from '@/components/Layout';
+import SettlementLayout from '@/components/Settlement/SettlementLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const FinancePage = () => {
   return (
-    <Layout>
-      <Card>
+    <SettlementLayout>
+      <Card className="card-elegant">
         <CardHeader>
           <CardTitle>Finance Details</CardTitle>
         </CardHeader>
@@ -13,7 +13,7 @@ const FinancePage = () => {
           <p className="text-muted-foreground">Finance details functionality coming soon...</p>
         </CardContent>
       </Card>
-    </Layout>
+    </SettlementLayout>
   );
 };
 
