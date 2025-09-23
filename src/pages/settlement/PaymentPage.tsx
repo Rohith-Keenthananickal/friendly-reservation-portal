@@ -1,12 +1,12 @@
 import React from 'react';
-import SettlementLayout from '@/components/Settlement/SettlementLayout';
-import NewPaymentView from '@/components/Settlement/NewPaymentView';
+import Layout from '@/components/Layout';
+import PaymentView from '@/components/Settlement/PaymentView';
 
 const PaymentPage = () => {
   return (
-    <SettlementLayout>
-      <NewPaymentView />
-    </SettlementLayout>
+    <Layout>
+      <PaymentView />
+    </Layout>
   );
 };
 

@@ -1,12 +1,19 @@
 import React from 'react';
-import SettlementLayout from '@/components/Settlement/SettlementLayout';
-import ReportsView from '@/components/Settlement/ReportsView';
+import Layout from '@/components/Layout';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const ReportsPage = () => {
   return (
-    <SettlementLayout>
-      <ReportsView />
-    </SettlementLayout>
+    <Layout>
+      <Card>
+        <CardHeader>
+          <CardTitle>Settlement Reports</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">Settlement reports functionality coming soon...</p>
+        </CardContent>
+      </Card>
+    </Layout>
   );
 };
 
