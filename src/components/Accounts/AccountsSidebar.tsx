@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { 
@@ -21,7 +20,7 @@ import {
 import { Link, useLocation } from 'react-router-dom';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
-const Sidebar = () => {
+const AccountsSidebar = () => {
   const location = useLocation();
   const [accountOpen, setAccountOpen] = useState(false);
   const [settlementOpen, setSettlementOpen] = useState(false);
@@ -150,4 +149,4 @@ const Sidebar = () => {
   );
 };
 
-export default Sidebar;
+export default AccountsSidebar;

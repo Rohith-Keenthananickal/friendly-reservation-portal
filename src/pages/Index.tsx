@@ -12,7 +12,7 @@ import { DateRange } from 'react-day-picker';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import ReceiptView from '@/components/Receipt/ReceiptView';
 import BookingView from '@/components/Booking/BookingView';
-import SettlementView from '@/components/Settlement/SettlementView';
+import PaymentView from '@/components/Accounts/PaymentView';
 import { Hotel, FileText, Calendar, CreditCard } from 'lucide-react';
 
 const Index = () => {
@@ -144,7 +144,7 @@ const Index = () => {
 
           {/* Settlement Tab Content */}
           <TabsContent value="settlement" className="mt-0">
-            <SettlementView />
+            <PaymentView />
           </TabsContent>
         </Tabs>
       </div>

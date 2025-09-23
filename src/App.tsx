@@ -11,9 +11,14 @@ import ReservationVoucherPage from "./pages/ReservationVoucherPage";
 import ReservationReceiptPage from "./pages/ReservationReceiptPage";
 import RoomAvailabilityCalendar from "./components/room-availability/RoomAvailabilityCalendar";
 import Layout from "./components/Layout";
-import SettlementPaymentPage from "./pages/settlement/PaymentPage";
-import SettlementReportsPage from "./pages/settlement/ReportsPage";
-import SettlementFinancePage from "./pages/settlement/FinancePage";
+import AccountsPaymentPage from "./pages/accounts/PaymentPage";
+import AccountsReportsPage from "./pages/accounts/ReportsPage";
+import AccountsFinancePage from "./pages/accounts/FinancePage";
+import AccountsOutstandingPage from "./pages/accounts/OutstandingPage";
+import AccountsIncomePage from "./pages/accounts/IncomePage";
+import AccountsExpensePage from "./pages/accounts/ExpensePage";
+import AccountsLedgerSetupPage from "./pages/accounts/LedgerSetupPage";
+import AccountsCashBookPage from "./pages/accounts/CashBookPage";
 
 const queryClient = new QueryClient();
 
@@ -33,10 +38,15 @@ const App = () => (
           <Route path="/payment" element={<PaymentPage />} />
           <Route path="/room-availability" element={<Layout><RoomAvailabilityCalendar /></Layout>} />
           
-          {/* Settlement Routes */}
-          <Route path="/settlement/payment" element={<SettlementPaymentPage />} />
-          <Route path="/settlement/reports" element={<SettlementReportsPage />} />
-          <Route path="/settlement/finance" element={<SettlementFinancePage />} />
+          {/* Accounts Routes */}
+          <Route path="/accounts/income" element={<AccountsIncomePage />} />
+          <Route path="/accounts/expense" element={<AccountsExpensePage />} />
+          <Route path="/accounts/ledger-setup" element={<AccountsLedgerSetupPage />} />
+          <Route path="/accounts/cash-book" element={<AccountsCashBookPage />} />
+          <Route path="/accounts/settlement/payment" element={<AccountsPaymentPage />} />
+          <Route path="/accounts/settlement/reports" element={<AccountsReportsPage />} />
+          <Route path="/accounts/settlement/finance" element={<AccountsFinancePage />} />
+          <Route path="/accounts/outstanding" element={<AccountsOutstandingPage />} />
 
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
