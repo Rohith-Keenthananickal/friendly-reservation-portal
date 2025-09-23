@@ -1,10 +1,10 @@
 import React from 'react';
-import AccountsLayout from '@/components/Accounts/AccountsLayout';
+import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const FinancePage = () => {
   return (
-    <AccountsLayout>
+    <Layout>
       <Card>
         <CardHeader>
           <CardTitle>Finance Details</CardTitle>
@@ -13,7 +13,7 @@ const FinancePage = () => {
           <p className="text-muted-foreground">Finance details functionality coming soon...</p>
         </CardContent>
       </Card>
-    </AccountsLayout>
+    </Layout>
   );
 };
 
