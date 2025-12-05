@@ -248,7 +248,7 @@ const ReceiptListingPage = () => {
         {/* Table View */}
         {viewMode === 'table' && <div className="border rounded-lg overflow-hidden">
             <Table className="bg-white">
-              <TableHeader>
+              <TableHeader className="bg-accent">
                 <TableRow className="bg-muted/50">
                   <TableHead>Reservation #</TableHead>
                   <TableHead>Guest Name</TableHead>
