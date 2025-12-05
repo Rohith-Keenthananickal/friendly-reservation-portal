@@ -14,6 +14,7 @@ import Layout from "./components/Layout";
 import SettlementPaymentPage from "./pages/settlement/PaymentPage";
 import SettlementReportsPage from "./pages/settlement/ReportsPage";
 import SettlementFinancePage from "./pages/settlement/FinancePage";
+import ReceiptListingPage from "./pages/ReceiptListingPage";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,9 @@ const App = () => (
           <Route path="/reservation-receipt" element={<ReservationReceiptPage />} />
           <Route path="/payment" element={<PaymentPage />} />
           <Route path="/room-availability" element={<Layout><RoomAvailabilityCalendar /></Layout>} />
+          
+          {/* Receipt Routes */}
+          <Route path="/receipt" element={<ReceiptListingPage />} />
           
           {/* Settlement Routes */}
           <Route path="/settlement/payment" element={<SettlementPaymentPage />} />

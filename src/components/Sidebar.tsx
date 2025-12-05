@@ -16,6 +16,7 @@ const Sidebar = () => {
     { name: 'Reservation Voucher', icon: <FileText className="w-5 h-5" />, path: '/reservation-voucher' },
     { name: 'Reservation Receipt', icon: <Receipt className="w-5 h-5" />, path: '/reservation-receipt' },
     { name: 'Room Availability', icon: <Calendar className="w-5 h-5" />, path: '/room-availability' },
+    { name: 'Receipt', icon: <Receipt className="w-5 h-5" />, path: '/receipt' },
   ];
 
   const settlementItems = [
