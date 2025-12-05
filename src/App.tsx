@@ -15,6 +15,7 @@ import SettlementPaymentPage from "./pages/settlement/PaymentPage";
 import SettlementReportsPage from "./pages/settlement/ReportsPage";
 import SettlementFinancePage from "./pages/settlement/FinancePage";
 import ReceiptListingPage from "./pages/ReceiptListingPage";
+import ReceiptDetailPage from "./pages/ReceiptDetailPage";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ const App = () => (
           
           {/* Receipt Routes */}
           <Route path="/receipt" element={<ReceiptListingPage />} />
+          <Route path="/receipt/:id" element={<ReceiptDetailPage />} />
           
           {/* Settlement Routes */}
           <Route path="/settlement/payment" element={<SettlementPaymentPage />} />
