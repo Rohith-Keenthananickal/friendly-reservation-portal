@@ -1,11 +1,21 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { 
   ArrowLeft, 
   User, 
@@ -21,8 +31,11 @@ import {
   Users,
   Clock,
   Hash,
-  Utensils
+  Utensils,
+  LogIn,
+  LogOut
 } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 const getBookingDetails = (bookingId: string) => {
   return {
@@ -94,6 +107,38 @@ const BookingDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const booking = getBookingDetails(id || '');
+  
+  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
+  const [generateInvoice, setGenerateInvoice] = useState<string>('no');
+  const [invoiceNumber, setInvoiceNumber] = useState('');
+
+  const handleCheckIn = () => {
+    toast({
+      title: "Check-in Successful",
+      description: `Guest ${booking.guestName} has been checked in to Room ${booking.roomNumber}.`,
+    });
+  };
+
+  const handleCheckoutSubmit = () => {
+    if (generateInvoice === 'yes' && !invoiceNumber.trim()) {
+      toast({
+        title: "Invoice Number Required",
+        description: "Please enter an invoice number.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsCheckoutModalOpen(false);
+    toast({
+      title: "Check-out Successful",
+      description: generateInvoice === 'yes' 
+        ? `Guest checked out. Invoice #${invoiceNumber} generated.`
+        : `Guest ${booking.guestName} has been checked out.`,
+    });
+    setGenerateInvoice('no');
+    setInvoiceNumber('');
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -139,6 +184,14 @@ const BookingDetailPage = () => {
             </div>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" onClick={handleCheckIn}>
+              <LogIn className="h-4 w-4 mr-2" />
+              Check In
+            </Button>
+            <Button variant="outline" onClick={() => setIsCheckoutModalOpen(true)}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Check Out
+            </Button>
             <Button variant="outline">
               <FileText className="h-4 w-4 mr-2" />
               Download Invoice
@@ -447,6 +500,49 @@ const BookingDetailPage = () => {
           </div>
         </div>
       </div>
+      {/* Checkout Modal */}
+      <Dialog open={isCheckoutModalOpen} onOpenChange={setIsCheckoutModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Check Out Guest</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-3">
+              <Label>Generate Invoice?</Label>
+              <RadioGroup value={generateInvoice} onValueChange={setGenerateInvoice}>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="yes" id="invoice-yes" />
+                  <Label htmlFor="invoice-yes" className="cursor-pointer">Yes</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="no" id="invoice-no" />
+                  <Label htmlFor="invoice-no" className="cursor-pointer">No</Label>
+                </div>
+              </RadioGroup>
+            </div>
+            
+            {generateInvoice === 'yes' && (
+              <div className="space-y-2">
+                <Label htmlFor="invoiceNumber">Invoice Number</Label>
+                <Input
+                  id="invoiceNumber"
+                  placeholder="Enter invoice number"
+                  value={invoiceNumber}
+                  onChange={(e) => setInvoiceNumber(e.target.value)}
+                />
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCheckoutModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCheckoutSubmit}>
+              Confirm Check Out
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
