@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { LogOut, Ship, HomeIcon, Building2, FileText, Receipt, Calendar, CreditCard, ChevronDown, BarChart3, DollarSign } from 'lucide-react';
+import { LogOut, Ship, HomeIcon, Building2, FileText, Receipt, Calendar, CreditCard, ChevronDown, BarChart3, DollarSign, ClipboardList } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
@@ -17,6 +17,7 @@ const Sidebar = () => {
     { name: 'Reservation Receipt', icon: <Receipt className="w-5 h-5" />, path: '/reservation-receipt' },
     { name: 'Room Availability', icon: <Calendar className="w-5 h-5" />, path: '/room-availability' },
     { name: 'Receipt', icon: <Receipt className="w-5 h-5" />, path: '/receipt' },
+    { name: 'Bookings', icon: <ClipboardList className="w-5 h-5" />, path: '/bookings' },
   ];
 
   const settlementItems = [
