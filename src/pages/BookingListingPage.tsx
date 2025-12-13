@@ -1,12 +1,12 @@
 
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { startOfDay, endOfDay, subDays, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval, parseISO } from 'date-fns';
 import Layout from '@/components/Layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -18,11 +18,14 @@ import {
   User,
   Building2,
   ArrowUpDown,
-  Eye
+  Eye,
+  X
 } from 'lucide-react';
 
 type PaymentStatus = 'PAID' | 'PENDING' | 'PARTIAL';
 type BookingSource = 'DIRECT' | 'AGENT' | 'OTA' | 'COMPANY' | 'WEBSITE';
+type DateFilterType = 'check-in' | 'check-out';
+type DateFilterRange = 'today' | 'tomorrow' | 'yesterday' | 'this-week' | 'next-week' | 'this-month' | 'all';
 
 interface Booking {
   id: string;
@@ -59,14 +62,49 @@ const sourceConfig: Record<BookingSource, { label: string; className: string }> 
   WEBSITE: { label: 'Website', className: 'bg-teal-100 text-teal-800' },
 };
 
+const dateRangeOptions: Record<DateFilterRange, string> = {
+  today: 'Today',
+  tomorrow: 'Tomorrow',
+  yesterday: 'Yesterday',
+  'this-week': 'This Week',
+  'next-week': 'Next Week',
+  'this-month': 'This Month',
+  all: 'All Dates',
+};
+
+const getDateRange = (range: DateFilterRange): { start: Date; end: Date } | null => {
+  const today = new Date();
+  
+  switch (range) {
+    case 'today':
+      return { start: startOfDay(today), end: endOfDay(today) };
+    case 'tomorrow':
+      return { start: startOfDay(addDays(today, 1)), end: endOfDay(addDays(today, 1)) };
+    case 'yesterday':
+      return { start: startOfDay(subDays(today, 1)), end: endOfDay(subDays(today, 1)) };
+    case 'this-week':
+      return { start: startOfWeek(today, { weekStartsOn: 1 }), end: endOfWeek(today, { weekStartsOn: 1 }) };
+    case 'next-week':
+      const nextWeekStart = addDays(startOfWeek(today, { weekStartsOn: 1 }), 7);
+      return { start: nextWeekStart, end: addDays(nextWeekStart, 6) };
+    case 'this-month':
+      return { start: startOfMonth(today), end: endOfMonth(today) };
+    case 'all':
+    default:
+      return null;
+  }
+};
+
+// Using current dates for demo purposes
+const today = new Date();
 const mockBookings: Booking[] = [
   {
     id: 'BKG-001',
     guestName: 'John Smith',
     email: 'john.smith@email.com',
     phone: '+91 9876543210',
-    checkIn: '2024-01-15',
-    checkOut: '2024-01-18',
+    checkIn: today.toISOString().split('T')[0],
+    checkOut: addDays(today, 3).toISOString().split('T')[0],
     nights: 3,
     roomType: 'Deluxe',
     roomNumber: '101',
@@ -77,7 +115,7 @@ const mockBookings: Booking[] = [
     balanceAmount: 10750,
     paymentStatus: 'PARTIAL',
     source: 'DIRECT',
-    bookedOn: '2024-01-10',
+    bookedOn: subDays(today, 5).toISOString().split('T')[0],
     mealPlan: 'MAP',
   },
   {
@@ -85,8 +123,8 @@ const mockBookings: Booking[] = [
     guestName: 'Alice Johnson',
     email: 'alice.j@email.com',
     phone: '+91 9876543211',
-    checkIn: '2024-01-20',
-    checkOut: '2024-01-25',
+    checkIn: addDays(today, 1).toISOString().split('T')[0],
+    checkOut: addDays(today, 6).toISOString().split('T')[0],
     nights: 5,
     roomType: 'Super Deluxe',
     roomNumber: '205',
@@ -97,7 +135,7 @@ const mockBookings: Booking[] = [
     balanceAmount: 0,
     paymentStatus: 'PAID',
     source: 'OTA',
-    bookedOn: '2024-01-12',
+    bookedOn: subDays(today, 3).toISOString().split('T')[0],
     mealPlan: 'CP',
   },
   {
@@ -105,8 +143,8 @@ const mockBookings: Booking[] = [
     guestName: 'Robert Brown',
     email: 'robert.b@email.com',
     phone: '+91 9876543212',
-    checkIn: '2024-01-22',
-    checkOut: '2024-01-24',
+    checkIn: subDays(today, 1).toISOString().split('T')[0],
+    checkOut: addDays(today, 1).toISOString().split('T')[0],
     nights: 2,
     roomType: 'Standard',
     roomNumber: '102',
@@ -117,7 +155,7 @@ const mockBookings: Booking[] = [
     balanceAmount: 8500,
     paymentStatus: 'PENDING',
     source: 'AGENT',
-    bookedOn: '2024-01-15',
+    bookedOn: subDays(today, 7).toISOString().split('T')[0],
     mealPlan: 'EP',
   },
   {
@@ -125,8 +163,8 @@ const mockBookings: Booking[] = [
     guestName: 'Emily Davis',
     email: 'emily.d@email.com',
     phone: '+91 9876543213',
-    checkIn: '2024-01-28',
-    checkOut: '2024-02-02',
+    checkIn: today.toISOString().split('T')[0],
+    checkOut: addDays(today, 5).toISOString().split('T')[0],
     nights: 5,
     roomType: 'Premium Suite',
     roomNumber: '301',
@@ -137,7 +175,7 @@ const mockBookings: Booking[] = [
     balanceAmount: 25000,
     paymentStatus: 'PARTIAL',
     source: 'COMPANY',
-    bookedOn: '2024-01-18',
+    bookedOn: subDays(today, 10).toISOString().split('T')[0],
     mealPlan: 'AP',
   },
   {
@@ -145,8 +183,8 @@ const mockBookings: Booking[] = [
     guestName: 'Michael Wilson',
     email: 'michael.w@email.com',
     phone: '+91 9876543214',
-    checkIn: '2024-02-05',
-    checkOut: '2024-02-08',
+    checkIn: addDays(today, 5).toISOString().split('T')[0],
+    checkOut: addDays(today, 8).toISOString().split('T')[0],
     nights: 3,
     roomType: 'Deluxe',
     roomNumber: '103',
@@ -157,7 +195,7 @@ const mockBookings: Booking[] = [
     balanceAmount: 0,
     paymentStatus: 'PAID',
     source: 'WEBSITE',
-    bookedOn: '2024-01-25',
+    bookedOn: subDays(today, 2).toISOString().split('T')[0],
     mealPlan: 'MAP',
   },
 ];
@@ -166,17 +204,26 @@ const BookingListingPage = () => {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedPaymentStatuses, setSelectedPaymentStatuses] = useState<PaymentStatus[]>(['PENDING', 'PARTIAL']);
+  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState<string>('all');
   const [selectedSource, setSelectedSource] = useState<string>('all');
+  const [dateFilterType, setDateFilterType] = useState<DateFilterType>('check-in');
+  const [dateFilterRange, setDateFilterRange] = useState<DateFilterRange>('today');
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
 
-  const togglePaymentStatus = (status: PaymentStatus) => {
-    setSelectedPaymentStatuses(prev =>
-      prev.includes(status)
-        ? prev.filter(s => s !== status)
-        : [...prev, status]
-    );
+  const clearFilters = () => {
+    setSearchQuery('');
+    setSelectedPaymentStatus('all');
+    setSelectedSource('all');
+    setDateFilterType('check-in');
+    setDateFilterRange('today');
+    setSortConfig(null);
   };
+
+  const hasActiveFilters = searchQuery !== '' || 
+    selectedPaymentStatus !== 'all' || 
+    selectedSource !== 'all' || 
+    dateFilterRange !== 'today' ||
+    dateFilterType !== 'check-in';
 
   const filteredBookings = useMemo(() => {
     return mockBookings.filter(booking => {
@@ -184,14 +231,22 @@ const BookingListingPage = () => {
         booking.guestName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         booking.id.toLowerCase().includes(searchQuery.toLowerCase());
       
-      const matchesPayment = selectedPaymentStatuses.length === 0 || 
-        selectedPaymentStatuses.includes(booking.paymentStatus);
+      const matchesPayment = selectedPaymentStatus === 'all' || 
+        booking.paymentStatus === selectedPaymentStatus;
       
       const matchesSource = selectedSource === 'all' || booking.source === selectedSource;
 
-      return matchesSearch && matchesPayment && matchesSource;
+      // Date filter
+      const dateRange = getDateRange(dateFilterRange);
+      let matchesDate = true;
+      if (dateRange) {
+        const dateToCheck = parseISO(dateFilterType === 'check-in' ? booking.checkIn : booking.checkOut);
+        matchesDate = isWithinInterval(dateToCheck, { start: dateRange.start, end: dateRange.end });
+      }
+
+      return matchesSearch && matchesPayment && matchesSource && matchesDate;
     });
-  }, [searchQuery, selectedPaymentStatuses, selectedSource]);
+  }, [searchQuery, selectedPaymentStatus, selectedSource, dateFilterType, dateFilterRange]);
 
   const sortedBookings = useMemo(() => {
     if (!sortConfig) return filteredBookings;
@@ -259,48 +314,77 @@ const BookingListingPage = () => {
         {/* Filters */}
         <Card>
           <CardContent className="pt-6">
-            <div className="flex flex-col lg:flex-row gap-4">
-              {/* Search */}
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by booking ID or guest name..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col lg:flex-row gap-4">
+                {/* Search */}
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by booking ID or guest name..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
 
-              {/* Source Filter */}
-              <Select value={selectedSource} onValueChange={setSelectedSource}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Source" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Sources</SelectItem>
-                  <SelectItem value="DIRECT">Direct</SelectItem>
-                  <SelectItem value="AGENT">Agent</SelectItem>
-                  <SelectItem value="OTA">OTA</SelectItem>
-                  <SelectItem value="COMPANY">Company</SelectItem>
-                  <SelectItem value="WEBSITE">Website</SelectItem>
-                </SelectContent>
-              </Select>
+                {/* Date Filter Type */}
+                <Select value={dateFilterType} onValueChange={(v) => setDateFilterType(v as DateFilterType)}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="check-in">Check-In</SelectItem>
+                    <SelectItem value="check-out">Check-Out</SelectItem>
+                  </SelectContent>
+                </Select>
 
-              {/* Payment Status Filter */}
-              <div className="flex items-center gap-4">
-                <span className="text-sm font-medium text-muted-foreground">Payment:</span>
-                {(Object.keys(paymentStatusConfig) as PaymentStatus[]).map(status => (
-                  <div key={status} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`payment-${status}`}
-                      checked={selectedPaymentStatuses.includes(status)}
-                      onCheckedChange={() => togglePaymentStatus(status)}
-                    />
-                    <Label htmlFor={`payment-${status}`} className="text-sm cursor-pointer">
-                      {paymentStatusConfig[status].label}
-                    </Label>
-                  </div>
-                ))}
+                {/* Date Filter Range */}
+                <Select value={dateFilterRange} onValueChange={(v) => setDateFilterRange(v as DateFilterRange)}>
+                  <SelectTrigger className="w-[150px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(dateRangeOptions).map(([value, label]) => (
+                      <SelectItem key={value} value={value}>{label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Source Filter */}
+                <Select value={selectedSource} onValueChange={setSelectedSource}>
+                  <SelectTrigger className="w-[150px]">
+                    <SelectValue placeholder="Source" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Sources</SelectItem>
+                    <SelectItem value="DIRECT">Direct</SelectItem>
+                    <SelectItem value="AGENT">Agent</SelectItem>
+                    <SelectItem value="OTA">OTA</SelectItem>
+                    <SelectItem value="COMPANY">Company</SelectItem>
+                    <SelectItem value="WEBSITE">Website</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {/* Payment Status Filter */}
+                <Select value={selectedPaymentStatus} onValueChange={setSelectedPaymentStatus}>
+                  <SelectTrigger className="w-[150px]">
+                    <SelectValue placeholder="Payment" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Payments</SelectItem>
+                    <SelectItem value="PAID">Paid</SelectItem>
+                    <SelectItem value="PENDING">Pending</SelectItem>
+                    <SelectItem value="PARTIAL">Partial</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {/* Clear Filters */}
+                {hasActiveFilters && (
+                  <Button variant="outline" onClick={clearFilters} className="gap-2">
+                    <X className="h-4 w-4" />
+                    Clear Filters
+                  </Button>
+                )}
               </div>
             </div>
           </CardContent>
