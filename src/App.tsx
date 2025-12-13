@@ -18,6 +18,7 @@ import ReceiptListingPage from "./pages/ReceiptListingPage";
 import ReceiptDetailPage from "./pages/ReceiptDetailPage";
 import BookingListingPage from "./pages/BookingListingPage";
 import BookingDetailPage from "./pages/BookingDetailPage";
+import FinalBillPage from "./pages/FinalBillPage";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,10 @@ const App = () => (
           {/* Booking Routes */}
           <Route path="/bookings" element={<BookingListingPage />} />
           <Route path="/bookings/:id" element={<BookingDetailPage />} />
+          
+          {/* Final Bill Route */}
+          <Route path="/final-bill/:id" element={<FinalBillPage />} />
+          <Route path="/final-bill" element={<FinalBillPage />} />
           
           {/* Settlement Routes */}
           <Route path="/settlement/payment" element={<SettlementPaymentPage />} />
