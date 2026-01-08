@@ -33,9 +33,13 @@ import {
   Hash,
   Utensils,
   LogIn,
-  LogOut
+  LogOut,
+  ArrowRightLeft,
+  ArrowUpCircle
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import RoomShiftingModal from '@/components/Booking/RoomShiftingModal';
+import RoomUpgradeModal from '@/components/Booking/RoomUpgradeModal';
 
 const getBookingDetails = (bookingId: string) => {
   return {
@@ -111,6 +115,8 @@ const BookingDetailPage = () => {
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   const [generateInvoice, setGenerateInvoice] = useState<string>('no');
   const [invoiceNumber, setInvoiceNumber] = useState('');
+  const [isRoomShiftingOpen, setIsRoomShiftingOpen] = useState(false);
+  const [isRoomUpgradeOpen, setIsRoomUpgradeOpen] = useState(false);
 
   const handleCheckIn = () => {
     toast({
@@ -183,7 +189,7 @@ const BookingDetailPage = () => {
               </p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button variant="outline" onClick={handleCheckIn}>
               <LogIn className="h-4 w-4 mr-2" />
               Check In
@@ -191,6 +197,14 @@ const BookingDetailPage = () => {
             <Button variant="outline" onClick={() => setIsCheckoutModalOpen(true)}>
               <LogOut className="h-4 w-4 mr-2" />
               Check Out
+            </Button>
+            <Button variant="outline" onClick={() => setIsRoomShiftingOpen(true)} className="border-amber-300 text-amber-700 hover:bg-amber-50">
+              <ArrowRightLeft className="h-4 w-4 mr-2" />
+              Room Shifting
+            </Button>
+            <Button variant="outline" onClick={() => setIsRoomUpgradeOpen(true)} className="border-green-300 text-green-700 hover:bg-green-50">
+              <ArrowUpCircle className="h-4 w-4 mr-2" />
+              Room Upgrade
             </Button>
             <Button variant="outline">
               <FileText className="h-4 w-4 mr-2" />
@@ -543,6 +557,25 @@ const BookingDetailPage = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Room Shifting Modal */}
+      <RoomShiftingModal
+        isOpen={isRoomShiftingOpen}
+        onClose={() => setIsRoomShiftingOpen(false)}
+        currentRoom={booking.roomNumber}
+        guestName={booking.guestName}
+      />
+
+      {/* Room Upgrade Modal */}
+      <RoomUpgradeModal
+        isOpen={isRoomUpgradeOpen}
+        onClose={() => setIsRoomUpgradeOpen(false)}
+        currentRoom={booking.roomNumber}
+        currentRoomType={booking.roomType}
+        currentRate={booking.roomRate}
+        remainingNights={booking.nights}
+        guestName={booking.guestName}
+      />
     </Layout>
   );
 };
